@@ -1,4 +1,4 @@
-/* Author : Nagios Services team */
+2/* Author : Nagios Services team */
 /* A simple deamon code which sits on top of the controller service
  * facing south, communicating with the monitoring servers. */
 
