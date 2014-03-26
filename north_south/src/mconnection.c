@@ -18,6 +18,7 @@
 #include <connection.h>
 #include <mconnection.h>
 #include <merrors.h>
+#include <interpreter.h>
 #include <log.h>
 
 static int monitor_CompChecksum(uint8_t *buf, uint32_t checksum);
@@ -110,6 +111,10 @@ static int monitor_Loop(struct Connection *connection){
 
 		/* Read in the amount of data indicated by the header. */
 		datalen = packet.len - sizeof(struct Packet);
+
+		#if DEBUG == 1
+			fprintf(stderr, "monitor_Loop :: Data Size %d\n", datalen);
+		#endif
 		
 		if((data = (uint8_t *)malloc(datalen)) ==  NULL){
 			/* Err : Memory error. */
@@ -153,6 +158,7 @@ static int monitor_Loop(struct Connection *connection){
 		/* Finally send this packet over to the interpreter,
 		 * which semantically makes sense of the packet and 
 		 * performs the required actions on it. */
+		parsePacket(buf);
 	}
 
 ret:

@@ -18,4 +18,6 @@ struct Packet {
 
 #define MAGIC_NUMBER 0xBAD2FACE
 
+#define DUMY 6
+
 #endif
