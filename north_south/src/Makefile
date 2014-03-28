@@ -3,12 +3,13 @@
 IDIR =../include
 CC=gcc
 CFLAGS=-I$(IDIR) -Wall -std=gnu99 -g
+LFLAGS=-lpthread
 
 ODIR=.
-_DEPS = monitor.h merrors.h mconnection.h cconnection.h controller.h log.h interpreter.h
+_DEPS = monitor.h merrors.h mconnection.h cconnection.h controller.h log.h interpreter.h mbuffer.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
-_MOBJ = monitor.o mconnection.o log.o interpreter.o 
+_MOBJ = monitor.o mconnection.o log.o interpreter.o mbuffer.o
 MOBJ = $(patsubst %,$(ODIR)/%,$(_MOBJ))
 
 _COBJ = controller.o cconnection.o log.o interpreter.o
@@ -17,10 +18,10 @@ COBJ = $(patsubst %,$(ODIR)/%,$(_COBJ))
 all: monitor controller
 
 monitor: $(MOBJ)
-	gcc -o $@ $^ $(CFLAGS)
+	gcc -o $@ $^ $(CFLAGS) $(LFLAGS) 
 
 controller: $(COBJ)
-	gcc -o $@ $^ $(CFLAGS)
+	gcc -o $@ $^ $(CFLAGS) $(LFLAGS)
 
 $(ODIR)/monitor.o: monitor.c $(DEPS) 
 	$(CC) -c $< $(CFLAGS)
@@ -38,6 +39,9 @@ $(ODIR)/interpreter.o: interpreter.c $(DEPS)
 	$(CC) -c $< $(CFLAGS)
 
 $(ODIR)/log.o: log.c $(DEPS)
+	$(CC) -c $< $(CFLAGS)
+
+$(ODIR)/mbuffer.o: mbuffer.c $(DEPS)
 	$(CC) -c $< $(CFLAGS)
 
 

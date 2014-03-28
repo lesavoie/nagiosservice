@@ -6,10 +6,13 @@
 
 #include <stdlib.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <stdio.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #include <connection.h>
 #include <interpreter.h>
@@ -18,6 +21,8 @@
 
 static int configHost(uint8_t *buf, int size);
 static int configHello(uint8_t *buf, int size);
+static int inline restartNagios();
+static int writeFile(char *filename, uint8_t *buf, int size);
 
 /* Function which takes a command packet, parses it to 
  * determine to which command it belongs and then
@@ -55,9 +60,34 @@ int parsePacket(uint8_t *buf) {
  * file. */
 static int configHost(uint8_t *buf, int size){
 
+	char *filename = "/etc/nagios3/conf.d/remote_host.cfg";
+
 	#if DEBUG == 1
 		fprintf(stderr, "configHost :: Request host configuration\n");
 	#endif
+
+	if(writeFile(filename, buf, size) < 0){
+		return ERR;	
+	}
+
+	restartNagios();
+
+	return  0;
+}
+
+static int configService(uint8_t *buf, int size){
+
+	char *filename = "/etc/nagios3/conf.d/remote_service.cfg";
+
+	#if DEBUG == 1
+		fprintf(stderr, "configHost :: Request service configuration\n");
+	#endif
+
+	if(writeFile(filename, buf, size) < 0){
+		return ERR;	
+	}
+
+	restartNagios();
 
 	return  0;
 }
@@ -69,4 +99,42 @@ static int configHello(uint8_t *buf, int size){
 	#endif
 
 	return 0;
+}
+
+/* Function to write to the given file. */
+static int writeFile(char *filename, uint8_t *buf, int size){
+	int count = -1;
+	int fd = -1;
+
+	if(size < 0 || filename == NULL || buf == NULL){
+		#if DEBUG == 1 
+			fprintf(stderr, "writeFile :: Argument error\n");
+		#endif
+		
+		return ERR;
+	}
+
+	if((fd = open(filename, O_WRONLY, 0)) < 0){
+		#if DEBUG == 1
+			fprintf(stderr, "configHost :: Could not open config file\n");
+		#endif
+		
+		return ERR;
+	}
+	
+	if((count = write(fd, buf, size)) < 0){
+		#if DEBUG == 1 
+			fprintf(stderr, "writeFile :: write() failure");
+		#endif
+		
+		close(fd);
+		return ERR;
+	}
+
+	return count;
+}
+
+/* Command to restart the nagios service. */
+static int inline restartNagios() {
+	return system("service nagios3 restart");
 }
