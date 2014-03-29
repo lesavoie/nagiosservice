@@ -19,6 +19,7 @@
 #include <mconnection.h>
 #include <merrors.h>
 #include <interpreter.h>
+#include <mbuffer.h>
 #include <log.h>
 
 static int monitor_CompChecksum(uint8_t *buf, uint32_t checksum);
@@ -183,5 +184,10 @@ void monitor_StartComm(char *ip, char *port) {
 
 	connection = monitor_Connect(ip, port);
 
+	/* Initialize and the start the buffer which pushes contents
+	 * onto the network stream. */
+	QInit();
+	QStartSpool(connection->msocket);
+	
 	monitor_Loop(connection);
 }

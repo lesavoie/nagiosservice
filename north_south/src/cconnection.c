@@ -138,6 +138,7 @@ static int controller_Handshake(int fd){
 
 	return 0;
 }
+
 static void inline controller_CrtPacket(struct Packet *header, uint8_t type){
 	header->magic_number = MAGIC_NUMBER;
 	header->type = type;

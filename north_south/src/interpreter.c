@@ -17,6 +17,8 @@
 #include <connection.h>
 #include <interpreter.h>
 #include <merrors.h>
+#include <mbuffer.h>
+#include <lib.h>
 #include <log.h>
 
 static int configHost(uint8_t *buf, int size);
@@ -94,9 +96,16 @@ static int configService(uint8_t *buf, int size){
 
 static int configHello(uint8_t *buf, int size){
 
+	uint8_t *data;
+
 	#if DEBUG == 1
 		fprintf(stderr, "configHello :: Request hello packet\n");
 	#endif
+
+	/* Reply back with the id of this monitor, which is currently 
+	 * just the username. */
+	data = newPacket(IDENT, (uint8_t*)"shravan", 7);	
+	QAddData(data, (*((struct Packet*)data)).len);	
 
 	return 0;
 }
