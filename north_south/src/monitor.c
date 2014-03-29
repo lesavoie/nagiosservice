@@ -12,12 +12,14 @@
 #include <monitor.h>
 #include <mconnection.h>
 
+char *id;
+
 int main(int argc, char *argv[]){
 	int opt;
 	char *ip, *port;
 	uint8_t fg = 0;	
 
-	while((opt = getopt(argc, argv, "fc:p:h")) != -1){
+	while((opt = getopt(argc, argv, "fc:p:hi:")) != -1){
 		switch(opt) {
 			case 'f':
 				/* Run this as a foreground application. */
@@ -29,6 +31,9 @@ int main(int argc, char *argv[]){
 				break;
 			case 'p':
 				port = optarg;
+				break;
+			case 'i':
+				id = optarg;
 				break;
 			case 'h':
 

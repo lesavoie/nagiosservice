@@ -20,6 +20,7 @@
 #include <merrors.h>
 #include <interpreter.h>
 #include <mbuffer.h>
+#include <lib.h>
 #include <log.h>
 
 static int monitor_CompChecksum(uint8_t *buf, uint32_t checksum);
@@ -80,90 +81,11 @@ ret:
  */
 static int monitor_Loop(struct Connection *connection){
 	
-	struct Packet packet;
-	int count = -1;
-	int datalen = -1;
-	uint8_t *data;
-	/* A data blob used to store the complete packet. */  
-	uint8_t *buf;
-	uint32_t checksum = 0x0;
-
-	if(connection == NULL)
-		goto ret;
-
-	memset(&packet, 0x0, sizeof(struct Packet));
-
-	while((count = read(connection->msocket, (void *)&packet,
-							sizeof(struct Packet))) >= 0){
-		
-		#if DEBUG == 1 
-			fprintf(stderr, "monitor_Loop :: Received packet\n"); 
-		#endif
-
-		/* Do some sanity check on the packet header. */
-		if(count < sizeof(struct Packet) ||
-						packet.magic_number != MAGIC_NUMBER){
-			/* Err : Corrupted packet. */
-			#if DEBUG == 1
-				fprintf(stderr, "monitor_Loop :: Packet Corrupted\n");
-			#endif
-			continue;	
-		}
-
-		/* Read in the amount of data indicated by the header. */
-		datalen = packet.len - sizeof(struct Packet);
-
-		#if DEBUG == 1
-			fprintf(stderr, "monitor_Loop :: Data Size %d\n", datalen);
-		#endif
-		
-		if((data = (uint8_t *)malloc(datalen)) ==  NULL){
-			/* Err : Memory error. */
-			#if DEBUG == 1 
-				fprintf(stderr, "monitor_Loop :: Memory Error\n");
-			#endif
-		}
-		/* FIXME: A miscreated packet can potentially enable the read()
-		 * to block indefinately. For instance: A packet who's
-		 * len field indicates @sizeof(struct Packet) + 4, is purposfully
-		 * wrongly crafted with no data in it, event though the header
-		 * indicates 4. Hence a timeout based mechanism must be in place.
-		 * There are a lot of other errors like, the following read() might
-		 * be tricked to accept a packet header as data, however currently
-		 * it is assumed that the libraries at the control server are
-		 * trusted. */
-		count = read(connection->msocket, (void*)data,
-						datalen);	
-	
-		if((buf = (uint8_t *)malloc(packet.len)) == NULL){
-			/* Err : Memory error. */
-			continue;
-		}
-
-		/* Copy the header. */
-		checksum = packet.checksum;
-		packet.checksum = 0x0;
-		memcpy(buf, &packet, sizeof(struct Packet));
-		memset(&packet, 0x0, sizeof(struct Packet));
-		
-		/* Copy the data. */
-		memcpy(buf+sizeof(struct Packet), data, datalen);
-		free(data);
-
-		/* Calculate a checksum over the complete packet for sanity
-		 * check. */
-		if(!monitor_CompChecksum(buf, checksum)){
-			/* Err : Corrupted packet. */
-		}
-
-		/* Finally send this packet over to the interpreter,
-		 * which semantically makes sense of the packet and 
-		 * performs the required actions on it. */
-		parsePacket(buf);
+	if(connection == NULL){
+		return ERR;
 	}
 
-ret:
-	return CONERR; 
+	return listenPackets(connection->msocket);
 }
 
 /* Function which calculates the checksum for the given data

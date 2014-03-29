@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <string.h>
 
 #include <connection.h>
 #include <interpreter.h>
@@ -21,8 +22,11 @@
 #include <lib.h>
 #include <log.h>
 
+extern char *id;
+
 static int configHost(uint8_t *buf, int size);
 static int configHello(uint8_t *buf, int size);
+static int configIdent(uint8_t *buf, int size);
 static int inline restartNagios();
 static int writeFile(char *filename, uint8_t *buf, int size);
 
@@ -44,6 +48,10 @@ int parsePacket(uint8_t *buf) {
 			break;
 		case CONTACT:
 			break;
+		case IDENT:
+			configIdent(buf + sizeof(struct Packet), header->len -
+													sizeof(struct Packet));
+			break;
 		case HELLO:
 			configHello(buf + sizeof(struct Packet), header->len -
 													sizeof(struct Packet));
@@ -56,6 +64,15 @@ int parsePacket(uint8_t *buf) {
 	}
 
 	return ret;
+}
+
+/* Function to handle the monitor identification. */
+static int configIdent(uint8_t *buf, int size){
+	#if DEBUG == 1
+		fprintf(stderr, "Monitor identified as : %s\n", buf);
+	#endif
+
+	return 0;
 }
 
 /* Function to handle changes to the host configuration
@@ -104,7 +121,7 @@ static int configHello(uint8_t *buf, int size){
 
 	/* Reply back with the id of this monitor, which is currently 
 	 * just the username. */
-	data = newPacket(IDENT, (uint8_t*)"shravan", 7);	
+	data = newPacket(IDENT, (uint8_t*)id, strlen(id));	
 	QAddData(data, (*((struct Packet*)data)).len);	
 
 	return 0;

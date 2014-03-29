@@ -19,6 +19,7 @@
 #include <cconnection.h>
 #include <interpreter.h>
 #include <merrors.h>
+#include <lib.h>
 #include <log.h>
 
 static int controller_CompChecksum(uint8_t *buf, uint32_t checksum);
@@ -98,6 +99,10 @@ static int controller_Loop(struct Connection *connection){
 		#endif
 
 		controller_Handshake(fd);
+
+		/* Start a service which listens onto the socket for 
+		 * incoming messages. */
+		listenPackets(fd);
 	}
 
 ret:
