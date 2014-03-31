@@ -23,7 +23,11 @@
 #include <lib.h>
 #include <log.h>
 
+#include <libcfu/cfuhash.h>
+
 static int monitor_CompChecksum(uint8_t *buf, uint32_t checksum);
+
+cfuhash_table_t *controller_map;
 
 /* Function which establishes a connection to the controller. 
  * Arg0 : IP address of the control server.

@@ -68,7 +68,7 @@ int listenPackets(int fd){
 	memset(&packet, 0x0, sizeof(struct Packet));
 
 	while((count = read(fd, (void *)&packet,
-							sizeof(struct Packet))) >= 0){
+							sizeof(struct Packet))) > 0){
 		
 		#if DEBUG == 1 
 			fprintf(stderr, "listenPackets :: Received packet\n"); 
@@ -133,7 +133,9 @@ int listenPackets(int fd){
 		/* Finally send this packet over to the interpreter,
 		 * which semantically makes sense of the packet and 
 		 * performs the required actions on it. */
-		parsePacket(buf);
+		 parsePacket(buf, fd);
+
+		 free(buf);
 	}
 
 	return ERR;

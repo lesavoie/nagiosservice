@@ -4,6 +4,7 @@ IDIR =../include
 CC=gcc
 CFLAGS=-I$(IDIR) -Wall -std=gnu99 -g
 LFLAGS=-lpthread
+LIBS=../libs
 
 ODIR=.
 _DEPS = monitor.h merrors.h mconnection.h cconnection.h controller.h log.h interpreter.h mbuffer.h lib.h
@@ -18,10 +19,10 @@ COBJ = $(patsubst %,$(ODIR)/%,$(_COBJ))
 all: monitor controller
 
 monitor: $(MOBJ)
-	gcc -o $@ $^ $(CFLAGS) $(LFLAGS) 
+	gcc -o $@ $^ $(CFLAGS) $(LFLAGS) -L$(LIBS) -lcfu
 
 controller: $(COBJ)
-	gcc -o $@ $^ $(CFLAGS) $(LFLAGS)
+	gcc -o $@ $^ $(CFLAGS) $(LFLAGS) -L$(LIBS) -lcfu
 
 $(ODIR)/monitor.o: monitor.c $(DEPS) 
 	$(CC) -c $< $(CFLAGS)

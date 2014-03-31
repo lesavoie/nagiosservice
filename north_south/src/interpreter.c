@@ -21,19 +21,23 @@
 #include <mbuffer.h>
 #include <lib.h>
 #include <log.h>
+#include <cconnection.h>
+
+#include <libcfu/cfuhash.h>
 
 extern char *id;
+extern cfuhash_table_t *controller_map;
 
 static int configHost(uint8_t *buf, int size);
 static int configHello(uint8_t *buf, int size);
-static int configIdent(uint8_t *buf, int size);
+static int configIdent(uint8_t *buf, int size, int fd);
 static int inline restartNagios();
 static int writeFile(char *filename, uint8_t *buf, int size);
 
 /* Function which takes a command packet, parses it to 
  * determine to which command it belongs and then
  * takes the required actions. */
-int parsePacket(uint8_t *buf) {
+int parsePacket(uint8_t *buf, int fd) {
 	struct Packet *header;	
 	int ret = ERR;
 
@@ -50,7 +54,7 @@ int parsePacket(uint8_t *buf) {
 			break;
 		case IDENT:
 			configIdent(buf + sizeof(struct Packet), header->len -
-													sizeof(struct Packet));
+													sizeof(struct Packet), fd);
 			break;
 		case HELLO:
 			configHello(buf + sizeof(struct Packet), header->len -
@@ -67,11 +71,27 @@ int parsePacket(uint8_t *buf) {
 }
 
 /* Function to handle the monitor identification. */
-static int configIdent(uint8_t *buf, int size){
+static int configIdent(uint8_t *buf, int size, int fd){
+	uint8_t *key = NULL;
+	int *data = NULL;	
+
 	#if DEBUG == 1
 		fprintf(stderr, "Monitor identified as : %s\n", buf);
 	#endif
 
+	key = (uint8_t*)malloc(size);
+	memcpy(key, buf, size);
+	data = (int*)malloc(sizeof(int));
+	memcpy(data, &fd, sizeof(int));
+
+	/* Add the mapping of the fd and monitor name to 
+	 * controller map. */
+	cfuhash_put(controller_map, (char*)key, (void*)data);
+
+	#if DEBUG == 1
+		cfuhash_pretty_print(controller_map, stderr);
+	#endif
+	
 	return 0;
 }
 

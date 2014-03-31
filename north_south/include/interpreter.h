@@ -10,6 +10,6 @@
 #define IDENT 5
 
 /* Function prototypes. */
-int parsePacket(uint8_t *buf);
+int parsePacket(uint8_t *buf, int fd);
 
 #endif

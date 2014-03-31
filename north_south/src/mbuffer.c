@@ -4,6 +4,12 @@
  * as long as there is data in it, it will keep adding it 
  * to the network stream. */
 
+/* Update:
+ * The spin lock QSpoolData() was killing my laptop battery
+ * by shooting the processor to 100%. Had to replace it
+ * with a crude mutex bases solution to save that from happening.
+ */
+
 #include <sys/types.h>
 #include <unistd.h>
 #include <stdint.h>
@@ -15,6 +21,7 @@
 
 static struct Queue queue;
 static pthread_mutex_t mutex;
+static pthread_mutex_t empty_mutex;
 
 static void *QSpoolData(void *args);
 
@@ -23,6 +30,9 @@ void QInit(){
 
 	/* Init the mutex. */
 	pthread_mutex_init(&mutex, NULL);
+	pthread_mutex_init(&empty_mutex, NULL);
+
+	pthread_mutex_lock(&empty_mutex);
 
 	queue.head = NULL;
 	queue.tail = NULL;
@@ -43,6 +53,8 @@ int QAddData(uint8_t *data, int size){
 		#endif
 		return ERR;
 	}
+
+	pthread_mutex_unlock(&empty_mutex);
 
 	pthread_mutex_lock(&mutex);
 
@@ -86,8 +98,7 @@ static void *QSpoolData(void *args){
 	}
 
 	while(1){
-		/* A simple tight loop, which stalls till data is present. */
-		while(queue.head == NULL);
+		pthread_mutex_lock(&empty_mutex);
 
 		pthread_mutex_lock(&mutex);
 
@@ -101,8 +112,11 @@ static void *QSpoolData(void *args){
 
 		/* Shift the head. */
 		queue.head = element->next;
-		if(queue.head == NULL)
+		if(queue.head == NULL){
 			queue.tail = NULL;
+		} else{
+			pthread_mutex_unlock(&empty_mutex);
+		}
 
 		pthread_mutex_unlock(&mutex);
 		

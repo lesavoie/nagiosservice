@@ -14,6 +14,7 @@
 #include <netinet/in.h>
 #include <stdio.h>
 #include <errno.h>
+#include <pthread.h>
 
 #include <connection.h>
 #include <cconnection.h>
@@ -22,9 +23,19 @@
 #include <lib.h>
 #include <log.h>
 
+#include <libcfu/cfuhash.h>
+
 static int controller_CompChecksum(uint8_t *buf, uint32_t checksum);
 static int controller_Handshake(int fd);
 static void inline controller_CrtPacket(struct Packet *header, uint8_t type);
+static void *controller_wrpHandshake(void *args);
+static void *controller_SouthLoop(void *args);
+static void *controller_NorthLoop(void *args);
+static void *controller_wrpNorth(void *args);
+
+/* A global hash object which holds a mapping of monitor id
+ * and fd it belongs to. */
+cfuhash_table_t *controller_map;
 
 /* Function which binds a connection to the controller. 
  * Arg0 : IP address of the control server.
@@ -81,9 +92,12 @@ ret:
  * Returns : This function ideally never returns, if it does 
  * return then there was some connection error. 
  */
-static int controller_Loop(struct Connection *connection){
-	
+static void *controller_SouthLoop(void *args){
 	int fd = -1;
+	pthread_t *thread = NULL;
+	struct Connection *connection = NULL;
+
+	connection = (struct Connection *)args;
 
 	if(connection == NULL)
 		goto ret;
@@ -95,18 +109,115 @@ static int controller_Loop(struct Connection *connection){
 							NULL, NULL)) >= 0){
 		/* A monitor has contacted us. */
 		#if DEBUG == 1
-			fprintf(stderr, "controller_loop :: Accepted monitor\n");
+			fprintf(stderr, "controller_SouthLoop :: Accepted monitor\n");
 		#endif
 
-		controller_Handshake(fd);
-
-		/* Start a service which listens onto the socket for 
-		 * incoming messages. */
-		listenPackets(fd);
+		/* FIXME: Memory leak. */
+		thread = (pthread_t *)malloc(sizeof(pthread_t));
+		pthread_create(thread, NULL, controller_wrpHandshake, (void*)&fd);	
 	}
 
 ret:
-	return CONERR; 
+	pthread_exit(NULL); 
+}
+
+/* Function which listens on the socket to see if there are any connections
+ * from the north bound to accept configuration files.
+ * Arg0 : Connection object.
+ * Returns : This function ideally never returns, if it does 
+ * return then there was some connection error. 
+ */
+static void *controller_NorthLoop(void *args){
+	int fd = -1;
+	pthread_t *thread = NULL;
+	struct Connection *connection = NULL;
+
+	connection = (struct Connection *)args;
+
+	if(connection == NULL)
+		goto ret;
+
+	if(listen(connection->msocket, MAX_PENDING) < 0)
+		goto ret;
+	
+	while((fd = accept(connection->msocket,
+							NULL, NULL)) >= 0){
+		/* A monitor has contacted us. */
+		#if DEBUG == 1
+			fprintf(stderr, "controller_NorthLoop :: Accepted connection\n");
+		#endif
+
+		/* FIXME: Memory leak. */
+		thread = (pthread_t *)malloc(sizeof(pthread_t));
+		pthread_create(thread, NULL, controller_wrpNorth, (void*)&fd);	
+	}
+
+ret:
+	pthread_exit(NULL);
+}
+
+/* Function which deals with taking data from the north bound
+ * and pushing it onto the south bound. */
+static void *controller_wrpNorth(void *args){
+	int fd = -1;
+	int count = -1;
+	char temp;
+	char *key;
+	int index = 0;
+	int *south_fd = NULL;
+
+	fd = *((int*)args);
+	key = (char*)malloc(sizeof(char) * 256);
+
+	/* Read the monitor id from the north bound. */
+	while((count = read(fd, &temp, sizeof(char))) > 0){
+		if(temp == '\n'){
+			key[index] = '\0';
+			break;
+		}
+		key[index++] = temp;
+	}
+
+	/* Search for the key in the hash table. 
+	 * If the key is not found close the connection and return. */
+	south_fd = (int*)cfuhash_get(controller_map, key);	
+
+	#if DEBUG == 1
+		fprintf(stderr, "controller_wrpNorth :: key => %s\n", key);	
+	#endif
+
+	if(south_fd == NULL){
+		#if DEBUG == 1
+			fprintf(stderr, "controller_wrpNorth :: Hash map miss\n");
+		#endif
+		goto ret;
+	}
+
+	#if DEBUG == 1
+		fprintf(stderr, "controller_wrpNorth :: south fd => %d\n", *south_fd);
+	#endif
+
+ret:
+	close(fd);
+	free(key);
+	pthread_exit(NULL);
+}
+
+/* A wrapper function which initiates the handshake protocol,
+ * and starts a listening service at the socket.
+ */
+static void *controller_wrpHandshake(void *args){
+	int fd = -1;
+
+	fd = *((int*)args);
+
+	/* Start a service which listens onto the socket for 
+	 * incoming messages. */
+	controller_Handshake(fd);
+	listenPackets(fd);
+	close(fd);
+
+	pthread_exit(NULL);
 }
 
 /* Do the initialization handshake. */
@@ -164,9 +275,23 @@ static int controller_CompChecksum(uint8_t *buf, uint32_t checksum){
 /* Wrapper function which the daemon calls.
  * This function so ideally never return. */
 void controller_StartComm(char *ip, char *port) {
-	struct Connection *connection;
+	struct Connection *connection_south;
+	struct Connection *connection_north;
+	pthread_t thread_north, thread_south;
 
-	connection = controller_Bind(ip, port);
+	/* Initialize the controller map. */
+	controller_map = cfuhash_new_with_initial_size(BUCKET_NUM);
 
-	controller_Loop(connection);
+	connection_south = controller_Bind(ip, port);
+	connection_north = controller_Bind("127.0.0.1", "6665");
+
+	/* Create 2 threads, one to listen north bound & the other
+	 * to listen south bound. */
+	pthread_create(&thread_north, NULL, controller_NorthLoop,
+						(void*)connection_north);
+	pthread_create(&thread_south, NULL, controller_SouthLoop,
+						(void*)connection_south);
+
+	pthread_join(thread_south, NULL);
+	pthread_join(thread_north, NULL);
 }
