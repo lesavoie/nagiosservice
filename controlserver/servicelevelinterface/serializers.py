@@ -22,3 +22,11 @@ class UserSerializer(serializers.ModelSerializer):
    class Meta:
       model = User
 
+
+# Serializer used just when creating users.  It only provides a subset of the
+# fields.
+class CreateUserSerializer(serializers.ModelSerializer):
+   class Meta:
+      model = User
+      fields = ('id', 'username', 'password', 'email')
+
