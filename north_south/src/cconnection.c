@@ -165,13 +165,14 @@ static void *controller_wrpNorth(void *args){
 	char *key;
 	int index = 0;
 	int *south_fd = NULL;
+	uint8_t forward_buffer[FORWARD_CHUNK];
 
 	fd = *((int*)args);
 	key = (char*)malloc(sizeof(char) * 256);
 
 	/* Read the monitor id from the north bound. */
 	while((count = read(fd, &temp, sizeof(char))) > 0){
-		if(temp == '\n'){
+		if(temp == '\n' || temp == '\r'){
 			key[index] = '\0';
 			break;
 		}
@@ -189,6 +190,7 @@ static void *controller_wrpNorth(void *args){
 	if(south_fd == NULL){
 		#if DEBUG == 1
 			fprintf(stderr, "controller_wrpNorth :: Hash map miss\n");
+			cfuhash_pretty_print(controller_map, stderr);
 		#endif
 		goto ret;
 	}
@@ -196,6 +198,12 @@ static void *controller_wrpNorth(void *args){
 	#if DEBUG == 1
 		fprintf(stderr, "controller_wrpNorth :: south fd => %d\n", *south_fd);
 	#endif
+
+	/* Read contents from the north bound interface and pass them
+	 * on the correct connection stream. */
+	while((count = read(fd, forward_buffer, FORWARD_CHUNK)) > 0){
+		write(*south_fd, forward_buffer, count);
+	}
 
 ret:
 	close(fd);

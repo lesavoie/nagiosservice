@@ -4,6 +4,7 @@
 
 #define MAX_PENDING 3
 #define BUCKET_NUM 32
+#define FORWARD_CHUNK 32
 
 void controller_StartComm(char *ip, char *port);
 

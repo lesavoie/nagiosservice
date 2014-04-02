@@ -16,7 +16,13 @@ MOBJ = $(patsubst %,$(ODIR)/%,$(_MOBJ))
 _COBJ = controller.o cconnection.o log.o interpreter.o mbuffer.o lib.o
 COBJ = $(patsubst %,$(ODIR)/%,$(_COBJ))
 
-all: monitor controller
+_TOBJ = tools.o cconnection.o log.o interpreter.o mbuffer.o lib.o
+TOBJ = $(patsubst %,$(ODIR)/%,$(_TOBJ))
+
+all: monitor controller tools
+
+tools: $(TOBJ)
+	gcc -o $@ $^ $(CFLAGS) $(LFLAGS) -L$(LIBS) -lcfu 
 
 monitor: $(MOBJ)
 	gcc -o $@ $^ $(CFLAGS) $(LFLAGS) -L$(LIBS) -lcfu
@@ -48,8 +54,10 @@ $(ODIR)/mbuffer.o: mbuffer.c $(DEPS)
 $(ODIR)/lib.o: lib.c $(DEPS)
 	$(CC) -c $< $(CFLAGS)
 
+$(ODIR)/tools.o: tools.c $(DEPS)
+	$(CC) -c $< $(CFLAGS)
 
 .PHONY: clean
 
 clean:
-	rm -f $(ODIR)/*.o *~ core $(INCDIR)/*~ monitor controller 
+	rm -f $(ODIR)/*.o *~ core $(INCDIR)/*~ monitor controller tools 

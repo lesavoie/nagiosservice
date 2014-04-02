@@ -38,7 +38,6 @@ cfuhash_table_t *controller_map;
 static struct Connection* monitor_Connect(char *ip, char *port) {
 	struct Connection *connection;
 
-
 	if(ip == NULL || port == NULL)
 		goto ret;
 
