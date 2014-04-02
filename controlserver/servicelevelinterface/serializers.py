@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from rest_framework import serializers
 from servicelevelinterface.models import Monitor, Contact, Command
 
@@ -15,4 +16,9 @@ class ContactSerializer(serializers.ModelSerializer):
 class CommandSerializer(serializers.ModelSerializer):
    class Meta:
       model = Command
+      
+
+class UserSerializer(serializers.ModelSerializer):
+   class Meta:
+      model = User
 
