@@ -16,6 +16,11 @@ class Contact(models.Model):
    # TODO: add support for other types of contacts (pagers are built in,
    # could also include things like pings to servers, IMs, etc).
    
+   # The user that owns this Contact
+   # TODO: setting editable to false doesn't seem to do anything - it still
+   # shows up on the form.
+   owner = models.ForeignKey('auth.User', editable=False)
+   
    # The name that allows the contact to be referenced in other objects
    # SlugField only accepts letters, numbers, underscores, and hyphens
    contact_name = models.SlugField()
@@ -35,6 +40,9 @@ class Command(models.Model):
    Allows the user to create custom commands to perform checks.
    '''
 
+   # The user that owns this Command
+   owner = models.ForeignKey('auth.User', editable=False)
+   
    # Name of the command - used to reference it in other objects   
    command_name = models.SlugField()
    
@@ -57,6 +65,9 @@ class Monitor(models.Model):
    Contains information about what to monitor, how to monitor it, and who to
    contact when a check fails.
    '''
+   
+   # The user that owns this Monitor
+   owner = models.ForeignKey('auth.User', editable=False)
    
    # Human readable name for the monitor for convenience
    human_readable_name = models.CharField(
