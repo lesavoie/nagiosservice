@@ -8,13 +8,45 @@ from rest_framework import status
 from servicelevelinterface.models import Monitor, Contact, Command
 from servicelevelinterface.permissions import IsOwner
 from servicelevelinterface.serializers import MonitorSerializer, ContactSerializer, CommandSerializer, UserSerializer, CreateUserSerializer
+from servicelevelinterface.mapperinterface import MapperInterface
 
 
 # TODO: the current permissions aren't quite working - sometimes users can view
 # things they shouldn't be able to view.
 
 
-class MonitorViewSet(viewsets.ModelViewSet):
+class MapperViewSet(viewsets.ModelViewSet):
+   # Base class that notifies the mapper whenever there is a change to a
+   # user's data.
+   mapper_interface = MapperInterface()
+   
+   def create(self, request):
+      ret = super(MapperViewSet, self).create(request)
+      self.mapper_interface.do_map(self.request.user)
+      return ret
+
+   def retrieve(self, request, pk=None):
+      ret = super(MapperViewSet, self).retrieve(request, pk)
+      self.mapper_interface.do_map(self.request.user)
+      return ret
+
+   def update(self, request, pk=None):
+      ret = super(MapperViewSet, self).update(request, pk)
+      self.mapper_interface.do_map(self.request.user)
+      return ret
+
+   def partial_update(self, request, pk=None):
+      ret = super(MapperViewSet, self).partial_update(request, pk)
+      self.mapper_interface.do_map(self.request.user)
+      return ret
+
+   def destroy(self, request, pk=None):
+      ret = super(MapperViewSet, self).destroy(request, pk)
+      self.mapper_interface.do_map(self.request.user)
+      return ret
+
+
+class MonitorViewSet(MapperViewSet):
    queryset = Monitor.objects.all()
    serializer_class = MonitorSerializer
    permission_classes = (permissions.IsAuthenticated,
@@ -25,7 +57,7 @@ class MonitorViewSet(viewsets.ModelViewSet):
       obj.owner = self.request.user
 
 
-class ContactViewSet(viewsets.ModelViewSet):
+class ContactViewSet(MapperViewSet):
    queryset = Contact.objects.all()
    serializer_class = ContactSerializer
    permission_classes = (permissions.IsAuthenticated,
@@ -36,7 +68,7 @@ class ContactViewSet(viewsets.ModelViewSet):
       obj.owner = self.request.user
 
 
-class CommandViewSet(viewsets.ModelViewSet):
+class CommandViewSet(MapperViewSet):
    queryset = Command.objects.all()
    serializer_class = CommandSerializer
    permission_classes = (permissions.IsAuthenticated,
