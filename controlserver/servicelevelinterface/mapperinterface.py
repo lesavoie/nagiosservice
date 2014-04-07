@@ -27,5 +27,7 @@ class MapperInterface:
       # TODO: this really should be done in a different thread.
       monitors = Monitor.objects.filter(owner__exact=user)
       contacts = Contact.objects.filter(owner__exact=user)
-      commands = Command.objects.filter(owner__exact=user)
+      # For now, all commands are default commands and are not associated with
+      # a user.s
+      commands = Command.objects.none()
       self.mapper.do_map(user, monitors, contacts, commands)

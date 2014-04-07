@@ -37,27 +37,19 @@ class Contact(models.Model):
 
 class Command(models.Model):
    '''
-   Allows the user to create custom commands to perform checks.
+   Commands to run when performing checks
    '''
 
-   # The user that owns this Command
-   owner = models.ForeignKey('auth.User', editable=False)
-   
    # Name of the command - used to reference it in other objects   
    command_name = models.SlugField()
    
-   # Command line arguments to pass to the command when it runs
+   # Default command line options that should be passed every time the command
+   # is executed.  Can include variables that will be filled in based on
+   # Monitor.command_line_parameters (see Nagios documentation for info on
+   # how to specify variables in command lines).
    command_line_parameters = models.CharField(
          max_length=MAX_COMMAND_LINE_PARAMS_LENGTH,
 	 blank=True)
-
-   # Binary executable that is run for this command.
-   # The binaries are storied in this location under MEDIA_ROOT (defined in
-   # controlserver/settings.py).  In our case, the binaries will be put into
-   # /home/media/bin/.
-   # TODO: files aren't deleted when the associated object is deleted from the
-   # database.  Need to come up with a way to sync them from time to time.
-   binary = models.FileField(upload_to='bin/')
 
 
 class Monitor(models.Model):
@@ -68,6 +60,9 @@ class Monitor(models.Model):
    
    # The user that owns this Monitor
    owner = models.ForeignKey('auth.User', editable=False)
+   
+   # Name of the monitor
+   monitor_name = models.SlugField()
    
    # Human readable name for the monitor for convenience
    human_readable_name = models.CharField(
@@ -93,3 +88,11 @@ class Monitor(models.Model):
    # The command to run to perform the check
    # TODO: need to add a set of default commands
    command = models.ForeignKey(Command)
+   
+   # Command line arguments to pass when the command is executed for this
+   # monitor.  This should include values to pass in for the variables in
+   # Command.command_line_parameters (see Nagios documentation for info on
+   # how to specify variables in command lines).
+   command_line_parameters = models.CharField(
+         max_length=MAX_COMMAND_LINE_PARAMS_LENGTH,
+	 blank=True)

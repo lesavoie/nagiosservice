@@ -7,40 +7,56 @@ from rest_framework.response import Response
 from rest_framework import status
 from servicelevelinterface.models import Monitor, Contact, Command
 from servicelevelinterface.permissions import IsOwner
-from servicelevelinterface.serializers import MonitorSerializer, ContactSerializer, CommandSerializer, UserSerializer, CreateUserSerializer
+from servicelevelinterface.serializers import MonitorSerializer, ContactSerializer, CommandSerializer, CreateUserSerializer
 from servicelevelinterface.mapperinterface import MapperInterface
+from servicelevelinterface.defaultcommands import generate_default_commands
 
 
 # TODO: the current permissions aren't quite working - sometimes users can view
 # things they shouldn't be able to view.
+# I think this has to do with the fact that calling list on a viewset doesn't
+# invoke object level permissions.
+
+# TODO: this is not the right place to generate default commands - it's
+# a workaround for now.
 
 
 class MapperViewSet(viewsets.ModelViewSet):
    # Base class that notifies the mapper whenever there is a change to a
    # user's data.
    mapper_interface = MapperInterface()
-   
+
+
+   def list(self, request):
+      generate_default_commands()
+      return super(MapperViewSet, self).list(request)
+	
    def create(self, request):
+      generate_default_commands()
       ret = super(MapperViewSet, self).create(request)
       self.mapper_interface.do_map(self.request.user)
       return ret
 
    def retrieve(self, request, pk=None):
+      generate_default_commands()
       ret = super(MapperViewSet, self).retrieve(request, pk)
       self.mapper_interface.do_map(self.request.user)
       return ret
 
    def update(self, request, pk=None):
+      generate_default_commands()
       ret = super(MapperViewSet, self).update(request, pk)
       self.mapper_interface.do_map(self.request.user)
       return ret
 
    def partial_update(self, request, pk=None):
+      generate_default_commands()
       ret = super(MapperViewSet, self).partial_update(request, pk)
       self.mapper_interface.do_map(self.request.user)
       return ret
 
    def destroy(self, request, pk=None):
+      generate_default_commands()
       ret = super(MapperViewSet, self).destroy(request, pk)
       self.mapper_interface.do_map(self.request.user)
       return ret
@@ -68,29 +84,41 @@ class ContactViewSet(MapperViewSet):
       obj.owner = self.request.user
 
 
-class CommandViewSet(MapperViewSet):
+class CommandViewSet(viewsets.ReadOnlyModelViewSet):
    queryset = Command.objects.all()
    serializer_class = CommandSerializer
-   permission_classes = (permissions.IsAuthenticated,
-                         IsOwner,)
 
-   def pre_save(self, obj):
-      # Save the user that created this object
-      obj.owner = self.request.user
+   def list(self, request):
+      generate_default_commands()
+      return super(CommandViewSet, self).list(request)
+	
+   def create(self, request):
+      generate_default_commands()
+      return super(CommandViewSet, self).create(request)
 
+   def retrieve(self, request, pk=None):
+      generate_default_commands()
+      return super(CommandViewSet, self).retrieve(request, pk)
 
-# This is for viewing the list of users.  It should probably be taken out of
-# production but is useful for debugging.
-class UserViewSet(viewsets.ReadOnlyModelViewSet):
-   queryset = User.objects.all()
-   serializer_class = UserSerializer
-	 
+   def update(self, request, pk=None):
+      generate_default_commands()
+      return super(CommandViewSet, self).update(request, pk)
+
+   def partial_update(self, request, pk=None):
+      generate_default_commands()
+      return super(CommandViewSet, self).partial_update(request, pk)
+
+   def destroy(self, request, pk=None):
+      generate_default_commands()
+      return super(CommandViewSet, self).destroy(request, pk)
+
 
 # This view is only used to create new users.
 # This code is based on code from: http://stackoverflow.com/questions/16857450/how-to-register-users-in-django-rest-framework
 # TODO: I think users can be created even when there is a problem.
 class CreateUserViewSet(mixins.CreateModelMixin,
                         viewsets.GenericViewSet):
+   model = User
    queryset = User.objects.all()
    serializer_class = CreateUserSerializer
    
