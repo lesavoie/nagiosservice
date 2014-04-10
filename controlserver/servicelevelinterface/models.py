@@ -12,7 +12,6 @@ class Contact(models.Model):
    '''
    Contains information about how to contact a Nagios user.
    '''
-   # TODO: need a way to sync the canonical state with the actual state
    # TODO: add support for other types of contacts (pagers are built in,
    # could also include things like pings to servers, IMs, etc).
    
@@ -47,7 +46,7 @@ class Command(models.Model):
    # is executed.  Can include variables that will be filled in based on
    # Monitor.command_line_parameters (see Nagios documentation for info on
    # how to specify variables in command lines).
-   command_line_parameters = models.CharField(
+   command_line = models.CharField(
          max_length=MAX_COMMAND_LINE_PARAMS_LENGTH,
 	 blank=True)
 

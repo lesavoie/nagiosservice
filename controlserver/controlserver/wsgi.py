@@ -14,6 +14,7 @@ framework.
 
 """
 import os
+from servicelevelinterface.defaultcommands import generate_default_commands
 
 # We defer to a DJANGO_SETTINGS_MODULE already in the environment. This breaks
 # if running multiple sites in the same mod_wsgi process. To fix this, use
@@ -30,3 +31,7 @@ application = get_wsgi_application()
 # Apply WSGI middleware here.
 # from helloworld.wsgi import HelloWorldApplication
 # application = HelloWorldApplication(application)
+
+# Generate the default commands.  This provides a convenient place where this
+# function is called once on startup.
+generate_default_commands()
