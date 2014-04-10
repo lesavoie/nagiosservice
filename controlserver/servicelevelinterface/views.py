@@ -31,10 +31,12 @@ class MapperViewSet(viewsets.ModelViewSet):
       self.mapper_interface.do_map(self.request.user)
       return ret
 
+   '''
    def retrieve(self, request, pk=None):
       ret = super(MapperViewSet, self).retrieve(request, pk)
       self.mapper_interface.do_map(self.request.user)
       return ret
+   '''
 
    def update(self, request, pk=None):
       ret = super(MapperViewSet, self).update(request, pk)

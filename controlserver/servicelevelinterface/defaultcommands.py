@@ -8,7 +8,6 @@ def generate_default_commands():
    
       '''
       Commands that could be added:
-      check_http
       check_ssh
       check_hda1 (free space on hda1)
       check_total_procs

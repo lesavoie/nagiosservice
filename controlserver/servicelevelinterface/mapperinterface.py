@@ -24,10 +24,9 @@ class MapperInterface:
    
    def do_map(self, user):
       # Query for the user's newest data and pass it to the mapper.
-      # TODO: this really should be done in a different thread.
       monitors = Monitor.objects.filter(owner__exact=user)
       contacts = Contact.objects.filter(owner__exact=user)
       # For now, all commands are default commands and are not associated with
-      # a user.s
-      commands = Command.objects.none()
+      # a user.
+      commands = Command.objects.all()
       self.mapper.do_map(user, monitors, contacts, commands)
