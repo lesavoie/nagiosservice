@@ -3,14 +3,8 @@ CREATE KEYSPACE nagioscontrol
     
 USE nagioscontrol;
 
-CREATE TABLE users(
-    openid          varchar,
-    openid_token    varchar,
-    PRIMARY KEY (openid)
-);
-
-CREATE TABLE monitor_servers(
+CREATE TABLE control_servers(
     openid  varchar,
     ip_addr varchar,
-    PRIMARY KEY (openid, ip_addr)
+    PRIMARY KEY (openid)
 );    
