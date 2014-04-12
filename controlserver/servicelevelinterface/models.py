@@ -32,7 +32,14 @@ class Contact(models.Model):
    
    # Email address to contact the person at
    email_address = models.EmailField(max_length=MAX_EMAIL_ADDRESS_LENGTH)
-      
+
+   # Handles how this model is displayed in drop down lists
+   def __unicode__(self):
+      return self.contact_name
+	
+   class Meta:
+      unique_together = ("owner", "contact_name")
+
 
 class Command(models.Model):
    '''
@@ -50,6 +57,10 @@ class Command(models.Model):
          max_length=MAX_COMMAND_LINE_PARAMS_LENGTH,
 	 blank=True)
 
+   # Handles how this model is displayed in drop down lists
+   def __unicode__(self):
+      return self.command_name
+	
 
 class Monitor(models.Model):
    '''
@@ -95,3 +106,6 @@ class Monitor(models.Model):
    command_line_parameters = models.CharField(
          max_length=MAX_COMMAND_LINE_PARAMS_LENGTH,
 	 blank=True)
+
+   class Meta:
+      unique_together = ("owner", "monitor_name")

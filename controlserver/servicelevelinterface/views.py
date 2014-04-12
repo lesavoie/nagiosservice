@@ -22,7 +22,6 @@ class MapperViewSet(viewsets.ModelViewSet):
    # user's data.
    mapper_interface = MapperInterface()
 
-
    def list(self, request):
       return super(MapperViewSet, self).list(request)
 	
