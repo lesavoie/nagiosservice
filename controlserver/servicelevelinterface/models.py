@@ -5,8 +5,8 @@ MAX_HUMAN_READABLE_NAME_LENGTH = 254
 
 MAX_EMAIL_ADDRESS_LENGTH = 254
 
-MAX_COMMAND_LINE_PARAMS_LENGTH = 1000
-   
+MAX_COMMAND_LINE_PARAMS_LENGTH = 100
+
 
 class Contact(models.Model):
    '''
@@ -99,10 +99,19 @@ class Monitor(models.Model):
    # TODO: need to add a set of default commands
    command = models.ForeignKey(Command)
    
-   # Command line arguments to pass when the command is executed for this
-   # monitor.  This should include values to pass in for the variables in
-   # Command.command_line_parameters (see Nagios documentation for info on
-   # how to specify variables in command lines).
+   # The level at which to send a warning to users for this monitor
+   warning_level = models.CharField(
+      max_length=MAX_COMMAND_LINE_PARAMS_LENGTH,
+      blank=True)
+
+   # The level at which to send users a critical alert for this monitor.
+   # This is only required for some commands, so it is marked optional.
+   critical_level = models.CharField(
+      max_length=MAX_COMMAND_LINE_PARAMS_LENGTH,
+      blank=True)
+   
+   # Any additonal command line parameters to pass to the command (other than
+   # warning and critical levels)
    command_line_parameters = models.CharField(
          max_length=MAX_COMMAND_LINE_PARAMS_LENGTH,
 	 blank=True)

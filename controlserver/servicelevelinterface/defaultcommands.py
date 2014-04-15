@@ -27,11 +27,11 @@ def generate_default_commands():
       # Check CPU command
       check_cpu = Command()
       check_cpu.command_name = 'check_cpu'
-      check_cpu.command_line = 'check_nrpe -H $HOSTADDRESS$ -c check_load -a $ARG2$'
+      check_cpu.command_line = "check_nrpe -H $HOSTADDRESS$ -c check_load -a '-w $ARG1$ -c $ARG2$'"
       check_cpu.save()
       
       # Check HTTP command
       check_http = Command()
       check_http.command_name = 'check_http'
-      check_http.command_line = 'check_http -I $HOSTADDRESS$ -p $ARG1$ -w $ARG2$ -c $ARG3$'
+      check_http.command_line = 'check_http -I $HOSTADDRESS$ -w $ARG1$ -c $ARG2$ -p $ARG3$'
       check_http.save()
