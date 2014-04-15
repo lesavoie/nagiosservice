@@ -4,11 +4,15 @@ from servicelevelinterface.models import Monitor, Contact, Command
 
 
 class MonitorSerializer(serializers.ModelSerializer):
+   owner = serializers.CharField(source='owner.username', read_only=True)
+
    class Meta:
       model = Monitor
 
 
 class ContactSerializer(serializers.ModelSerializer):
+   owner = serializers.CharField(source='owner.username', read_only=True)
+
    class Meta:
       model = Contact
 

@@ -18,7 +18,7 @@ class Contact(models.Model):
    # The user that owns this Contact
    # TODO: setting editable to false doesn't seem to do anything - it still
    # shows up on the form.
-   owner = models.ForeignKey('auth.User', editable=False)
+   owner = models.ForeignKey('auth.User')
    
    # The name that allows the contact to be referenced in other objects
    # SlugField only accepts letters, numbers, underscores, and hyphens
@@ -69,7 +69,7 @@ class Monitor(models.Model):
    '''
    
    # The user that owns this Monitor
-   owner = models.ForeignKey('auth.User', editable=False)
+   owner = models.ForeignKey('auth.User')
    
    # Name of the monitor
    monitor_name = models.SlugField()
