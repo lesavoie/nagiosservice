@@ -27,5 +27,5 @@ class CommandSerializer(serializers.ModelSerializer):
 class CreateUserSerializer(serializers.ModelSerializer):
    class Meta:
       model = User
-      fields = ('id', 'username', 'password', 'email')
+      fields = ('username', 'password', 'email')
 

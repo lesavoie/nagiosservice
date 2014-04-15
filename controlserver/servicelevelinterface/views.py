@@ -11,49 +11,47 @@ from servicelevelinterface.serializers import MonitorSerializer, ContactSerializ
 from servicelevelinterface.mapperinterface import MapperInterface
 
 
-# TODO: the current permissions aren't quite working - sometimes users can view
-# things they shouldn't be able to view.
-# I think this has to do with the fact that calling list on a viewset doesn't
-# invoke object level permissions.
-
-
-class MapperViewSet(viewsets.ModelViewSet):
-   # Base class that notifies the mapper whenever there is a change to a
-   # user's data.
+class BaseNagiosViewSet(viewsets.ModelViewSet):
+   '''
+   Base class that customizes the default ModelViewSet according to our needs.
+   It does the following:
+   1) Restricts the queryset to only those items owned by the user
+   2) Updates the mapper any time a change is made
+   '''
+   
    mapper_interface = MapperInterface()
 
-   def list(self, request):
-      return super(MapperViewSet, self).list(request)
-	
-   def create(self, request):
-      ret = super(MapperViewSet, self).create(request)
-      self.mapper_interface.do_map(self.request.user)
-      return ret
+   def get_queryset(self):
+      # Restrict the queryset to only those objects owned by the user
+      user = self.request.user
+      return self.serializer_class.Meta.model.objects.filter(owner=user)
 
-   '''
-   def retrieve(self, request, pk=None):
-      ret = super(MapperViewSet, self).retrieve(request, pk)
+   def create(self, request):
+      ret = super(BaseNagiosViewSet, self).create(request)
+      # Notify the mapper of the update
       self.mapper_interface.do_map(self.request.user)
       return ret
-   '''
 
    def update(self, request, pk=None):
-      ret = super(MapperViewSet, self).update(request, pk)
+      ret = super(BaseNagiosViewSet, self).update(request, pk)
+      # Notify the mapper of the update
       self.mapper_interface.do_map(self.request.user)
       return ret
 
    def partial_update(self, request, pk=None):
-      ret = super(MapperViewSet, self).partial_update(request, pk)
+      ret = super(BaseNagiosViewSet, self).partial_update(request, pk)
+      # Notify the mapper of the update
       self.mapper_interface.do_map(self.request.user)
       return ret
 
    def destroy(self, request, pk=None):
-      ret = super(MapperViewSet, self).destroy(request, pk)
+      ret = super(BaseNagiosViewSet, self).destroy(request, pk)
+      # Notify the mapper of the update
       self.mapper_interface.do_map(self.request.user)
       return ret
 
 
-class MonitorViewSet(MapperViewSet):
+class MonitorViewSet(BaseNagiosViewSet):
    queryset = Monitor.objects.all()
    serializer_class = MonitorSerializer
    permission_classes = (permissions.IsAuthenticated,
@@ -64,7 +62,7 @@ class MonitorViewSet(MapperViewSet):
       obj.owner = self.request.user
 
 
-class ContactViewSet(MapperViewSet):
+class ContactViewSet(BaseNagiosViewSet):
    queryset = Contact.objects.all()
    serializer_class = ContactSerializer
    permission_classes = (permissions.IsAuthenticated,
