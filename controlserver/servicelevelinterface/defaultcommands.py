@@ -25,10 +25,10 @@ def generate_default_commands():
    
       check_cpu = Command()
       check_cpu.command_name = 'check_cpu'
-      check_cpu.description = 'Checks the CPU utilization of the given host.  Critical (and optionally warning) levels should be specified in terms of percent CPU utilization.  Note: in order to use this check, the NRPE plugin must be installed on the monitored host.'
+      check_cpu.description = 'Checks the CPU utilization of the given host.  Critical and warning levels are specified in the format LOAD1,LOAD5,LOAD15, where LOADX is the average CPU utilization over the last X minutes.  Note: in order to use this command, NRPE must be installed on the monitored host.'
       check_cpu.save()
       
       check_http = Command()
       check_http.command_name = 'check_http'
-      check_http.description = 'Checks for a live HTTP interface on the given host.  Critical (and optionally warning) levels should be specified in terms of milliseconds of latency.'
+      check_http.description = 'Checks for a live HTTP interface on the given host.  Critical and warning levels represent response times in seconds that should not be exceeded.'
       check_http.save()
