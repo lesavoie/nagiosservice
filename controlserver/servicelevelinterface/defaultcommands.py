@@ -18,20 +18,17 @@ def generate_default_commands():
       check_mysql
       '''
       
-      # Check host alive command
       host_alive = Command()
       host_alive.command_name = 'check_host_alive'
-      host_alive.command_line = '/usr/lib/nagios/plugins/check_ping -H $HOSTADDRESS$ -w 5000,100% -c 5000,100% -p 1'
+      host_alive.description = 'Determines if a given host is up or down.  This command does not accept a critical or warning level.'
       host_alive.save()
    
-      # Check CPU command
       check_cpu = Command()
       check_cpu.command_name = 'check_cpu'
-      check_cpu.command_line = "check_nrpe -H $HOSTADDRESS$ -c check_load -a '-w $ARG1$ -c $ARG2$'"
+      check_cpu.description = 'Checks the CPU utilization of the given host.  Critical (and optionally warning) levels should be specified in terms of percent CPU utilization.  Note: in order to use this check, the NRPE plugin must be installed on the monitored host.'
       check_cpu.save()
       
-      # Check HTTP command
       check_http = Command()
       check_http.command_name = 'check_http'
-      check_http.command_line = 'check_http -I $HOSTADDRESS$ -w $ARG1$ -c $ARG2$ -p $ARG3$'
+      check_http.description = 'Checks for a live HTTP interface on the given host.  Critical (and optionally warning) levels should be specified in terms of milliseconds of latency.'
       check_http.save()

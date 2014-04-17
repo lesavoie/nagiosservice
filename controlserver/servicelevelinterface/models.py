@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.validators import MinValueValidator
 
 # This is arbitrary - it may need to be changed
 MAX_HUMAN_READABLE_NAME_LENGTH = 254
@@ -12,26 +13,20 @@ class Contact(models.Model):
    '''
    Contains information about how to contact a Nagios user.
    '''
-   # TODO: add support for other types of contacts (pagers are built in,
-   # could also include things like pings to servers, IMs, etc).
    
-   # The user that owns this Contact
-   # TODO: setting editable to false doesn't seem to do anything - it still
-   # shows up on the form.
-   owner = models.ForeignKey('auth.User')
+   owner = models.ForeignKey('auth.User',
+      help_text='The user that created this contact')
    
-   # The name that allows the contact to be referenced in other objects
-   # SlugField only accepts letters, numbers, underscores, and hyphens
-   contact_name = models.SlugField()
+   contact_name = models.SlugField(
+      help_text='A unique name for this contact')
    
-   # Human readable version of the contact name
-   # The max_length used here may need to be adjusted
    human_readable_name = models.CharField(
       max_length=MAX_HUMAN_READABLE_NAME_LENGTH,
-      blank=True)
+      blank=True,
+      help_text='Human-readable version of the contact name for convenience (optional)')
    
-   # Email address to contact the person at
-   email_address = models.EmailField(max_length=MAX_EMAIL_ADDRESS_LENGTH)
+   email_address = models.EmailField(max_length=MAX_EMAIL_ADDRESS_LENGTH,
+      help_text='Email address to send notifications to in case of failures')
 
    # Handles how this model is displayed in drop down lists
    def __unicode__(self):
@@ -46,17 +41,12 @@ class Command(models.Model):
    Commands to run when performing checks
    '''
 
-   # Name of the command - used to reference it in other objects   
-   command_name = models.SlugField()
+   command_name = models.SlugField(
+      help_text='The unique name for this command')
    
-   # Default command line options that should be passed every time the command
-   # is executed.  Can include variables that will be filled in based on
-   # Monitor.command_line_parameters (see Nagios documentation for info on
-   # how to specify variables in command lines).
-   command_line = models.CharField(
-         max_length=MAX_COMMAND_LINE_PARAMS_LENGTH,
-	 blank=True)
-
+   # Help text
+   description = models.TextField()
+   
    # Handles how this model is displayed in drop down lists
    def __unicode__(self):
       return self.command_name
@@ -68,53 +58,47 @@ class Monitor(models.Model):
    contact when a check fails.
    '''
    
-   # The user that owns this Monitor
-   owner = models.ForeignKey('auth.User')
+   owner = models.ForeignKey('auth.User',
+      help_text='The user that created this monitor')
    
-   # Name of the monitor
-   monitor_name = models.SlugField()
+   monitor_name = models.SlugField(
+      help_text='A unique name for this monitor')
    
-   # Human readable name for the monitor for convenience
    human_readable_name = models.CharField(
       max_length=MAX_HUMAN_READABLE_NAME_LENGTH,
-      blank=True)
+      blank=True,
+      help_text='Human-readable version of the monitor name for convenience (optional)')
       
-   # IP address to monitor
-   # TODO: also allow DNS addresses
-   address = models.GenericIPAddressField()
+   address = models.GenericIPAddressField(
+      help_text='The IP address of the host to monitor')
    
-   # Number of times to retry a failed check before sending an alert
-   max_check_attempts = models.IntegerField()
+   max_check_attempts = models.IntegerField(
+      validators=[MinValueValidator(1)],
+      help_text='Number of times to retry a failed check before sending an alert')
    
-   # How often (in minutes) to check this monitor
-   check_interval = models.IntegerField()
+   check_interval = models.IntegerField(
+      validators=[MinValueValidator(1)],
+      help_text='How often (in minutes) to run this check')
    
-   # List of contacts to notify when a check fails
-   contacts = models.ManyToManyField(Contact)
+   contacts = models.ManyToManyField(Contact,
+      help_text='List of contacts to notify when this check fails')
    
-   # How often to notify the contacts that the check is still failing
-   notification_interval = models.IntegerField()
+   notification_interval = models.IntegerField(
+      validators=[MinValueValidator(1)],
+      help_text='Amount of time (in minutes) between successive alerts if this check continues to fail')
    
-   # The command to run to perform the check
-   # TODO: need to add a set of default commands
-   command = models.ForeignKey(Command)
+   command = models.ForeignKey(Command,
+      help_text='The command to run when performing the check')
    
-   # The level at which to send a warning to users for this monitor
    warning_level = models.CharField(
       max_length=MAX_COMMAND_LINE_PARAMS_LENGTH,
-      blank=True)
+      blank=True,
+      help_text='The level at which to send a warning for this check (i.e. if the command is check_cpu and the warning level is 80, an alert will be sent when the CPU usage goes above 80%).  Specifying a warning level is optional.')
 
-   # The level at which to send users a critical alert for this monitor.
-   # This is only required for some commands, so it is marked optional.
    critical_level = models.CharField(
       max_length=MAX_COMMAND_LINE_PARAMS_LENGTH,
-      blank=True)
+      blank=True,
+      help_text='The level at which to send a critical alert for this check (i.e. if the command is check_cpu and the critical level is 90, an alert will be sent when the CPU usage goes above 90%).  This field is optional because it is not required for all commands.')
    
-   # Any additonal command line parameters to pass to the command (other than
-   # warning and critical levels)
-   command_line_parameters = models.CharField(
-         max_length=MAX_COMMAND_LINE_PARAMS_LENGTH,
-	 blank=True)
-
    class Meta:
       unique_together = ("owner", "monitor_name")

@@ -73,6 +73,9 @@ class ContactViewSet(BaseNagiosViewSet):
       obj.owner = self.request.user
 
 
+# Currently, only default commands are provided and users are not allowed to
+# generate their own custom commands.  Consequently, no permissions are required
+# to view commands, and create/update/delete are not allowed.
 class CommandViewSet(viewsets.ReadOnlyModelViewSet):
    queryset = Command.objects.all()
    serializer_class = CommandSerializer
@@ -80,8 +83,6 @@ class CommandViewSet(viewsets.ReadOnlyModelViewSet):
 
 # This view is only used to create new users.
 # This code is based on code from: http://stackoverflow.com/questions/16857450/how-to-register-users-in-django-rest-framework
-# TODO: this always returns an error when the user is created but it seems to
-# work anyway.
 class CreateUserViewSet(mixins.CreateModelMixin,
                         viewsets.GenericViewSet):
    model = User
@@ -95,7 +96,11 @@ class CreateUserViewSet(mixins.CreateModelMixin,
             username=serialized.init_data['username'],
             password=serialized.init_data['password'],
             email=serialized.init_data['email'],)
+	    
+	 # Generate a token for this user
          token = Token.objects.create(user=user)
+	 
+	 # The token is included in the header for the response
          return Response(serialized.data,
 	                 status=status.HTTP_201_CREATED,
 			 headers={'Token':token})
