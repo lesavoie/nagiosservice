@@ -11,6 +11,8 @@
 #include <sys/uio.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <string.h>
+#include <errno.h>
 
 #include <interpreter.h>
 #include <connection.h>
@@ -150,4 +152,230 @@ int listenPackets(int fd){
 
 static int CompChecksum(uint8_t *buf, uint32_t checksum){
 	return 1;
+}
+
+/* Connect and return the fd for the connection to *ip and
+ * *port.
+ */
+int libConnect(char *ip, char *port){
+	struct sockaddr_in address;
+	int sd = -1;
+
+	address.sin_family = AF_INET;
+	address.sin_port = htons(atoi(port));
+	inet_aton(ip, &address.sin_addr);
+
+	sd = socket(AF_INET, SOCK_STREAM, 0);
+
+	/* Try establishing a connection to the controller. */
+	if(connect(sd, (struct sockaddr*)&address,
+					 sizeof(struct sockaddr_in)) < 0){
+
+		#if DEBUG == 1
+			fprintf(stderr, "libConnect :: %s\n", strerror(errno));
+		#endif
+		return ERR;
+	}
+
+	return sd;
+}
+
+/* Function which gets the value associated with a key from the DB. 
+ * Returns the value as a NULL terminated string. */
+char *libDbGet(char *table_name, char *key, char *ip, char *port){
+	const char *cmd = "get";
+	const char *delim = ":";
+	int fd = -1;
+	char *send = NULL;
+	char *tempsend = NULL;
+	char *recv = NULL;
+	char *temprecv = NULL;
+	int count = -1;
+	int len = -1;
+	int a = -1;
+
+	if(table_name == NULL || key == NULL || ip == NULL || port == NULL){
+		#if DEBUG == 1
+			fprintf(stderr, "libDbGet :: Argument Error\n");
+		#endif
+
+		return NULL;
+	}
+
+	if((fd = libConnect(ip, port)) < 0){
+		#if DEBUG == 1 
+			fprintf(stderr, "libDbGet :: libConnect returned -1\n");
+		#endif
+		
+		return NULL;
+	}
+
+	send = (char *)malloc(strlen(cmd)+(strlen(delim)*2)+
+							strlen(table_name)+strlen(key)+2);
+
+	if(send == NULL){
+		#if DEBUG == 1
+			fprintf(stderr, "libDbGet :: Memory error\n");
+		#endif
+
+		return NULL;
+	}
+
+	tempsend = send;
+
+	memcpy(tempsend, cmd, strlen(cmd));
+	tempsend += strlen(cmd);
+	memcpy(tempsend, delim, strlen(delim));
+	tempsend += strlen(delim);
+	memcpy(tempsend, table_name, strlen(table_name));
+	tempsend += strlen(table_name);
+	memcpy(tempsend, delim, strlen(delim));
+	tempsend += strlen(delim);
+	memcpy(tempsend, key, strlen(key));
+	tempsend += strlen(key);
+	memcpy(tempsend, "\n\0", 2);
+
+	/* Send this command string to the db server. */
+	if(write(fd, send, strlen(send)) < 0){
+		#if DEBUG == 1
+			fprintf(stderr, "libDbGet :: Socket write error\n");
+		#endif
+
+		return NULL;
+	}
+
+	free(send);
+
+	recv = (char *)malloc(sizeof(char)*READ_CHUNCK);
+
+	temprecv = recv;
+	for(a=2; (count = read(fd, temprecv, READ_CHUNCK)) > 0; a++){
+		if(temprecv[count-1] == '\n') {
+			break;
+		}
+
+		recv = realloc(recv, READ_CHUNCK*a);
+		temprecv += READ_CHUNCK;
+	}
+
+	/* We remove the last '\n' value and replace it with a '\0'
+	 * making it into a proper string. */
+	temprecv[count-1] = '\0';
+
+	/* Logically truncate *recv to remove the cmd and delim,
+	 * by shifting the characters and moving the \0 */
+
+	for(a=0; a < strlen(recv) && recv[a] != ':'; a++);
+	a++;
+
+	/* Avoiding using memcpy, as behaviour is undefined when
+	 * strings overlap. */
+	len = strlen(recv);
+	memmove(recv, recv+a, len-a);
+	recv[len-a+1] = '\0';
+
+	return recv;
+}
+
+/* Function which puts the given value inside the db.
+ * Returns strings true | false depending on the db controller. */
+char *libDbPut(char *table_name, char *key, 
+						char *value, char *ip, char *port){
+	const char *cmd = "put";
+	const char *delim = ":";
+	int fd = -1;
+	char *send = NULL;
+	char *tempsend = NULL;
+	char *recv = NULL;
+	char *temprecv = NULL;
+	int count = -1;
+	int len = -1;
+	int a = -1;
+
+	if(table_name == NULL || key == NULL || ip == NULL || port == NULL){
+		#if DEBUG == 1
+			fprintf(stderr, "libDbPut :: Argument Error\n");
+		#endif
+
+		return NULL;
+	}
+
+	if((fd = libConnect(ip, port)) < 0){
+		#if DEBUG == 1 
+			fprintf(stderr, "libDbPut :: libConnect returned -1\n");
+		#endif
+		
+		return NULL;
+	}
+
+	send = (char *)malloc(strlen(cmd)+(strlen(delim)*3)+
+							strlen(table_name)+strlen(key)+
+							strlen(value)+2);
+
+	if(send == NULL){
+		#if DEBUG == 1
+			fprintf(stderr, "libDbPut :: Memory error\n");
+		#endif
+
+		return NULL;
+	}
+
+	tempsend = send;
+
+	memcpy(tempsend, cmd, strlen(cmd));
+	tempsend += strlen(cmd);
+	memcpy(tempsend, delim, strlen(delim));
+	tempsend += strlen(delim);
+	memcpy(tempsend, table_name, strlen(table_name));
+	tempsend += strlen(table_name);
+	memcpy(tempsend, delim, strlen(delim));
+	tempsend += strlen(delim);
+	memcpy(tempsend, key, strlen(key));
+	tempsend += strlen(key);
+	memcpy(tempsend, delim, strlen(delim));
+	tempsend += strlen(delim);
+	memcpy(tempsend, key, strlen(value));
+	tempsend += strlen(value);
+	memcpy(tempsend, "\n\0", 2);
+
+	/* Send this command string to the db server. */
+	if(write(fd, send, strlen(send)) < 0){
+		#if DEBUG == 1
+			fprintf(stderr, "libDbPut :: Socket write error\n");
+		#endif
+
+		return NULL;
+	}
+
+	free(send);
+
+	recv = (char *)malloc(sizeof(char)*READ_CHUNCK);
+
+	temprecv = recv;
+	for(a=2; (count = read(fd, temprecv, READ_CHUNCK)) > 0; a++){
+		if(temprecv[count-1] == '\n') {
+			break;
+		}
+
+		recv = realloc(recv, READ_CHUNCK*a);
+		temprecv += READ_CHUNCK;
+	}
+
+	/* We remove the last '\n' value and replace it with a '\0'
+	 * making it into a proper string. */
+	temprecv[count-1] = '\0';
+
+	/* Logically truncate *recv to remove the cmd and delim,
+	 * by shifting the characters and moving the \0 */
+
+	for(a=0; a < strlen(recv) && recv[a] != ':'; a++);
+	a++;
+
+	/* Avoiding using memcpy, as behaviour is undefined when
+	 * strings overlap. */
+	len = strlen(recv);
+	memmove(recv, recv+a, len-a);
+	recv[len-a+1] = '\0';
+
+	return recv;
 }
