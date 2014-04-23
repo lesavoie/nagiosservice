@@ -1,5 +1,4 @@
 from django.db import models
-from django.core.validators import MinValueValidator
 
 # This is arbitrary - it may need to be changed
 MAX_HUMAN_READABLE_NAME_LENGTH = 254
@@ -44,8 +43,8 @@ class Command(models.Model):
    command_name = models.SlugField(
       help_text='The unique name for this command')
    
-   # Help text
-   description = models.TextField()
+   description = models.TextField(
+      help_text='Help text for this command')
    
    # Handles how this model is displayed in drop down lists
    def __unicode__(self):
@@ -73,19 +72,16 @@ class Monitor(models.Model):
       help_text='The IP address of the host to monitor')
    
    max_check_attempts = models.IntegerField(
-      validators=[MinValueValidator(1)],
-      help_text='Number of times to retry a failed check before sending an alert')
+      help_text='Number of times to retry a failed check before sending an alert. If you enter zero in this field, it will revert to the default value of 3.')
    
    check_interval = models.IntegerField(
-      validators=[MinValueValidator(1)],
-      help_text='How often (in minutes) to run this check')
+      help_text='How often (in minutes) to run this check. If you enter zero in this field, it will revert to the default value of 10.')
    
    contacts = models.ManyToManyField(Contact,
       help_text='List of contacts to notify when this check fails')
    
    notification_interval = models.IntegerField(
-      validators=[MinValueValidator(1)],
-      help_text='Amount of time (in minutes) between successive alerts if this check continues to fail')
+      help_text='Amount of time (in minutes) between successive alerts if this check continues to fail. If you enter zero in this field, it will revert to the default value of 60.')
    
    command = models.ForeignKey(Command,
       help_text='The command to run when performing the check')
@@ -93,12 +89,12 @@ class Monitor(models.Model):
    warning_level = models.CharField(
       max_length=MAX_COMMAND_LINE_PARAMS_LENGTH,
       blank=True,
-      help_text='The level at which to send a warning for this check (i.e. if the command is check_cpu and the warning level is 80, an alert will be sent when the CPU usage goes above 80%).  Specifying a warning level is optional.')
+      help_text='The level at which to send a warning for this check. Specifying a warning level is optional.')
 
    critical_level = models.CharField(
       max_length=MAX_COMMAND_LINE_PARAMS_LENGTH,
       blank=True,
-      help_text='The level at which to send a critical alert for this check (i.e. if the command is check_cpu and the critical level is 90, an alert will be sent when the CPU usage goes above 90%).  This field is optional because it is not required for all commands.')
+      help_text='The level at which to send a critical alert for this check. This field is optional because it is not required for all commands.')
    
    class Meta:
       unique_together = ("owner", "monitor_name")

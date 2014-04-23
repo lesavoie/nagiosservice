@@ -11,6 +11,11 @@ from servicelevelinterface.serializers import MonitorSerializer, ContactSerializ
 from servicelevelinterface.mapperinterface import MapperInterface
 
 
+DEFAULT_MAX_CHECK_ATTEMPTS = 3
+DEFAULT_CHECK_INTERVAL = 10
+DEFAULT_NOTIFICATION_INTERVAL = 60
+
+
 class BaseNagiosViewSet(viewsets.ModelViewSet):
    '''
    Base class that customizes the default ModelViewSet according to our needs.
@@ -60,6 +65,14 @@ class MonitorViewSet(BaseNagiosViewSet):
    def pre_save(self, obj):
       # Save the user that created this object
       obj.owner = self.request.user
+      
+      # Set the default values if necessary
+      if obj.max_check_attempts == 0:
+         obj.max_check_attempts = DEFAULT_MAX_CHECK_ATTEMPTS
+      if obj.check_interval == 0:
+         obj.check_interval = DEFAULT_CHECK_INTERVAL
+      if obj.notification_interval == 0:
+         obj.notification_interval = DEFAULT_NOTIFICATION_INTERVAL
 
 
 class ContactViewSet(BaseNagiosViewSet):

@@ -35,20 +35,9 @@ class Mapper:
    # TODO: contact_groups 
    def processMonitor(self, monitor, hostsFile, servicesFile, contactsFile):
       
-      # default max check attempts 3 times to determine its final(hard) state
-      maxCheckAttempts = 3
-      if monitor.max_check_attempts != 0:
-         maxCheckAttempts = monitor.max_check_attempts
-      
-      # default check every 10 minutes in normal condition
-      checkInterval = 10
-      if monitor.check_interval != 0:
-         checkInterval = monitor.check_interval
-      
-      # default re-notify the user every 1 hour = 60 minutes
-      notificationInterval = 60
-      if monitor.notification_interval != 0:
-         notificationInterval = monitor.notification_interval
+      maxCheckAttempts = monitor.max_check_attempts
+      checkInterval = monitor.check_interval
+      notificationInterval = monitor.notification_interval
          
       # construct command string
       # TODO: will need to change when we support command line parameters
