@@ -10,8 +10,6 @@ def generate_default_commands():
       Commands that could be added:
       check_ssh
       check_hda1 (free space on hda1)
-      check_total_procs
-      check_zombie_procs
       check_dns
       check_smtp (or other forms of email)
       check_tcp
@@ -32,3 +30,18 @@ def generate_default_commands():
       check_http.command_name = 'check_http'
       check_http.description = 'Checks for a live HTTP interface on the given host.  Critical and warning levels represent response times in seconds that should not be exceeded.'
       check_http.save()
+      
+      procs = Command()
+      procs.command_name = 'check_total_procs'
+      procs.description = 'Checks the number of processes running on the specified hosts.  Critical and warning levels represent the number of processes or a range of processes (can be in the form "min:max", "min:", ":max", or "max").  If you specify "max:min", an alert will be generated when the number of processes is inside the specified range.'
+      procs.save()
+      
+      check_users = Command()
+      check_users.command_name = 'check_users'
+      check_users.description = 'Checks the number of users logged in to the specified host.  Critical and warning levels represent the number of users logged in.'
+      check_users.save()
+      
+      zombie = Command()
+      zombie.command_name = 'check_zombie_procs'
+      zombie.description = 'Checks the number of zombie processes on the specified host.  Critical and warning levels are specified as integers.'
+      zombie.save()
