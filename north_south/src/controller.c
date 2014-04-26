@@ -11,15 +11,22 @@
 
 #include <controller.h>
 #include <cconnection.h>
+#include <lib.h>
 
 char *id;
+
+char *myip;
+char *dbip;
+char *dbport;
+char *tablename;
 
 int main(int argc, char *argv[]){
 	int opt;
 	char *ip, *port;
+	char *dip, *dport;
 	uint8_t fg = 0;	
 
-	while((opt = getopt(argc, argv, "fc:p:hi:")) != -1){
+	while((opt = getopt(argc, argv, "fc:p:hi:d:e:")) != -1){
 		switch(opt) {
 			case 'f':
 				/* Run this as a foreground application. */
@@ -38,6 +45,14 @@ int main(int argc, char *argv[]){
 			case 'i':
 				id = optarg;
 				break;
+			case 'd':
+				/* Cassandra deamon IP address. */
+				dip = optarg;
+				break;
+			case 'e':
+				/* Cassandra deamon port number. */
+				dport = optarg;
+				break;
 			case 'h':
 
 			case '?':
@@ -47,9 +62,9 @@ int main(int argc, char *argv[]){
 				return -1;
 		}
 	}
-
+	
 	/* Start the daemon service. */
-	controller_Start(fg, ip, port);	
+	controller_Start(fg, ip, port, dip, dport);	
 	
 	return 0;
 }
@@ -60,11 +75,13 @@ int main(int argc, char *argv[]){
  * arg1 - IP address of the control server.
  * arg2 - Port number at the control server to connect to.
  */
-static int controller_Start(uint8_t fg, char *ip, char *port){
+static int controller_Start(uint8_t fg, char *ip, char *port,
+								char *dip, char *dport){
 	
 	int pid = -1; 
 
-	if(ip == NULL || port == NULL)
+	if(ip == NULL || port == NULL || dip == NULL || 
+											dport == NULL)
 		return ERR;
 
 	if(fg)
@@ -80,6 +97,12 @@ static int controller_Start(uint8_t fg, char *ip, char *port){
 	}
 
 child:
+	myip = ip;
+	dbip = dip;
+	dbport = dport;
+	tablename = "control_servers";
+
+
 	/* Establish the connection to the control server. */
 	controller_StartComm(ip, port);
 

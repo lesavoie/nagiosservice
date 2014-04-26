@@ -14,6 +14,11 @@
 
 char *id;
 
+char *myip;
+char *dbip;
+char *dbport;
+char *tablename;
+
 int main(int argc, char *argv[]){
 	int opt;
 	char *ip, *port;

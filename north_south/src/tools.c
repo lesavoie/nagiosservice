@@ -20,7 +20,12 @@
 #include <connection.h>
 #include <log.h>
 
+/* Globals needed to avoid linker errors with interpreter.o */
 char *id;
+char *myip;
+char *dbip;
+char *dbport;
+char *tablename = "control_servers";
 
 static int pushConfigFile(char *filename, char *ip, char *port,
 									char *id, int type);
@@ -38,11 +43,11 @@ int main(int argc, char *argv[]){
 				filename = optarg;
 				break;
 			case 'c':
-				/* IP address of the control server to connect to. */
+				/* IP address casssandra DB daemon. */ 
 				ip = optarg;
 				break;
 			case 'p':
-				port = optarg;
+				port = optarg;	
 				break;
 			case 'i':
 				id = optarg;
@@ -78,6 +83,8 @@ static int pushConfigFile(char *filename, char *ip, char *port,
 	int offset = -1;
 	uint8_t *packet = NULL;
 	char *newid = NULL;
+	char *dbstatus = NULL;
+
 
 	if(filename == NULL || ip == NULL || port == NULL ||
 									id == NULL){
@@ -92,9 +99,26 @@ static int pushConfigFile(char *filename, char *ip, char *port,
 	strcat(newid, "\n");
 	
 	address.sin_family = AF_INET;
-	address.sin_port = htons(atoi(port));
-	inet_aton(ip, &address.sin_addr);
+	address.sin_port = htons(atoi(CONTROLLER_NORTH_PORT));
 
+
+
+	/* Ask the db daemon, were to find the corresponding 
+	 * users connection. */
+	dbstatus = libDbGet(tablename, id, ip, port);		
+
+	#if DEBUG == 1 
+		fprintf(stderr, "pushConfigFile :: Found controller : %s\n",
+													dbstatus);
+	#endif
+
+	if(!strlen(dbstatus)){
+		/* We could not find an entry for this in the DB,
+		 * gracefully fail. */
+		return ERR;
+	}
+
+	inet_aton(dbstatus, &address.sin_addr);
 	sd = socket(AF_INET, SOCK_STREAM, 0);
 
 	/* Try establishing a connection to the controller. */
@@ -134,6 +158,7 @@ static int pushConfigFile(char *filename, char *ip, char *port,
 	close(sd);
 	free(packet);
 	free(newid);
+	free(dbstatus);
 
 	return 0;
 }

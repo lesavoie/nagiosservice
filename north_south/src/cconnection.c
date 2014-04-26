@@ -291,7 +291,8 @@ void controller_StartComm(char *ip, char *port) {
 	controller_map = cfuhash_new_with_initial_size(BUCKET_NUM);
 
 	connection_south = controller_Bind(ip, port);
-	connection_north = controller_Bind("127.0.0.1", "6665");
+	connection_north = controller_Bind(CONTROLLER_NORTH_IP,
+											CONTROLLER_NORTH_PORT);
 
 	/* Create 2 threads, one to listen north bound & the other
 	 * to listen south bound. */

@@ -272,7 +272,7 @@ char *libDbGet(char *table_name, char *key, char *ip, char *port){
 	 * strings overlap. */
 	len = strlen(recv);
 	memmove(recv, recv+a, len-a);
-	recv[len-a+1] = '\0';
+	recv[len-a] = '\0';
 
 	return recv;
 }
@@ -334,9 +334,13 @@ char *libDbPut(char *table_name, char *key,
 	tempsend += strlen(key);
 	memcpy(tempsend, delim, strlen(delim));
 	tempsend += strlen(delim);
-	memcpy(tempsend, key, strlen(value));
+	memcpy(tempsend, value, strlen(value));
 	tempsend += strlen(value);
 	memcpy(tempsend, "\n\0", 2);
+
+	#if DEBUG == 1
+		fprintf(stderr, "libDbPut :: DB query sent -> %s\n", send);
+	#endif
 
 	/* Send this command string to the db server. */
 	if(write(fd, send, strlen(send)) < 0){
@@ -375,7 +379,7 @@ char *libDbPut(char *table_name, char *key,
 	 * strings overlap. */
 	len = strlen(recv);
 	memmove(recv, recv+a, len-a);
-	recv[len-a+1] = '\0';
+	recv[len-a] = '\0';
 
 	return recv;
 }

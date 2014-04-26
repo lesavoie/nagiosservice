@@ -25,6 +25,13 @@
 
 #include <libcfu/cfuhash.h>
 
+/* These fields are required to speak with the cassandra 
+ * database deamon. */
+extern char *myip;	/* Ip of the instance that has called this. */
+extern char *dbip;	/* Ip address of the cassandra daemon is running on. */
+extern char *dbport;
+extern char *tablename;
+
 extern char *id;
 extern cfuhash_table_t *controller_map;
 
@@ -74,6 +81,7 @@ int parsePacket(uint8_t *buf, int fd) {
 static int configIdent(uint8_t *buf, int size, int fd){
 	uint8_t *key = NULL;
 	int *data = NULL;	
+	char *dbstatus = NULL;
 
 	#if DEBUG == 1
 		fprintf(stderr, "Monitor identified as : %s\n", buf);
@@ -89,8 +97,22 @@ static int configIdent(uint8_t *buf, int size, int fd){
 	cfuhash_put(controller_map, (char*)key, (void*)data);
 
 	#if DEBUG == 1
+		fprintf(stderr, "configIdent :: Connecting to %s %s\n",
+												dbip, dbport);
+	#endif
+	
+	/* Also send this mapping to the cassandra database. */
+	dbstatus = libDbPut(tablename, (char*)key, (char*)myip, dbip, dbport);	
+
+	#if DEBUG == 1
 		cfuhash_pretty_print(controller_map, stderr);
 	#endif
+
+	#if DEBUG == 1
+		fprintf(stderr, "configIdent :: DB returned => %s\n", dbstatus);
+	#endif
+
+	free(dbstatus);
 	
 	return 0;
 }
