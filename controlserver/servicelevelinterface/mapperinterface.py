@@ -75,10 +75,21 @@ class Mapper:
       hostsFile.close()
       servicesFile.close()
       
-      # call tool
-      # ret = subprocess.call(["tool", "-i", user.username, "-t", "1", "-f", hostsFile.abspath], shell=True)
-      # ret = subprocess.call(["tool", "-i", user.username, "-t", "2", "-f", servicesFile.abspath], shell=True)
-      # ret = subprocess.call(["tool", "-i", user.username, "-t", "3", "-f", contactsFile.abspath], shell=True)
+      # call tool (Timeout only works for python3.3 or this code won't compile)
+      '''
+      try:
+         ret = subprocess.call(["tool -i " + user.username + " -f " + hostsFile.abspath], shell=True, timeout=10)
+      except TimeoutExpired:
+         print "Processing timeout."
+      try:
+         ret = subprocess.call(["tool -i " + user.username + " -f " + servicesFile.abspath], shell=True, timeout=10)
+      except TimeoutExpired:
+         print "Processing timeout."
+      try:
+         ret = subprocess.call(["tool -i " + user.username + " -f " + contactsFile.abspath], shell=True, timeout=10)
+      except TimeoutExpired:
+         print "Processing timeout."
+      '''
       
       # clean up temp folder
       shutil.rmtree(parentDir)
