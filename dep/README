@@ -1,0 +1,15 @@
+A. Introduction
+-------------------
+
+1. These are source files of dependencies our code depends on.
+2. We only maintain those parts of the libraries which concern us.
+3. For original, vanilla version of these libraries we suggest 
+	you refer to table at the bottom of this document, for download
+	links.
+
+B. Download Table
+-------------------
+
+1. libcfu - http://sourceforge.net/projects/libcfu/
+
+
