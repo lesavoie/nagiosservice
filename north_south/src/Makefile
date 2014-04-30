@@ -19,15 +19,21 @@ COBJ = $(patsubst %,$(ODIR)/%,$(_COBJ))
 _TOBJ = tools.o cconnection.o log.o interpreter.o mbuffer.o lib.o
 TOBJ = $(patsubst %,$(ODIR)/%,$(_TOBJ))
 
-all: monitor controller tools
+all: ns_monitor ns_controller ns_tools
 
-tools: $(TOBJ)
+install: ns_monitor ns_controller ns_tools
+	mkdir -p /usr/local/bin/
+	cp ns_monitor /usr/local/bin/
+	cp ns_controller /usr/local/bin/
+	cp ns_tools /usr/local/bin/
+
+ns_tools: $(TOBJ)
 	gcc -o $@ $^ $(CFLAGS) $(LFLAGS) -L$(LIBS) -lcfu 
 
-monitor: $(MOBJ)
+ns_monitor: $(MOBJ)
 	gcc -o $@ $^ $(CFLAGS) $(LFLAGS) -L$(LIBS) -lcfu
 
-controller: $(COBJ)
+ns_controller: $(COBJ)
 	gcc -o $@ $^ $(CFLAGS) $(LFLAGS) -L$(LIBS) -lcfu
 
 $(ODIR)/monitor.o: monitor.c $(DEPS) 
