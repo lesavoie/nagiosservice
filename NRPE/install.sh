@@ -5,8 +5,6 @@
 # Note: this script will create a user called "nagios".  If such a user already exists, it
 # assumes that the nagios user was created for NRPE.
 
-# TODO: add statements that describe what is going on
-
 if [[ $EUID -ne 0 ]]; then
    echo 'This script must be run as root'
    exit 1
@@ -85,5 +83,5 @@ service xinetd restart
 echo '-----------------------------------------------------------------------'
 echo "Please add your monitoring server's IP address to the file"
 echo "/etc/xinetd.d/nrpe at the end of the line starting with"
-echo "'only_from = 127.0.0.1'"
+echo "'only_from = 127.0.0.1'.  Then run 'service xinetd restart'."
 echo '-----------------------------------------------------------------------'
