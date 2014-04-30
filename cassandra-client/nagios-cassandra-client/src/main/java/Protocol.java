@@ -45,7 +45,7 @@ public class Protocol {
 		
 		if (values[1].equals("control_servers")) {
 			boolean status = cassClient.updateServer(values[2], values[3]);
-			return "put" + delim + Boolean.toString(status);			
+			return "update" + delim + Boolean.toString(status);			
 		}
 		else {
 			return "error" + delim + values[0] + delim + "unknown_table" + delim + values[1];
@@ -60,7 +60,7 @@ public class Protocol {
 		
 		if (values[1].equals("control_servers")) {
 			boolean status = cassClient.deleteServer(values[2]);
-			return "put" + delim + Boolean.toString(status);			
+			return "delete" + delim + Boolean.toString(status);			
 		}
 		else {
 			return "error" + delim + values[0] + delim + "unknown_table" + delim + values[1];
@@ -82,6 +82,9 @@ public class Protocol {
 		}
 		else if (values[0].equals("delete")) {
 			return processDelete(values);				
+		}
+		else if (values[0].equals("init")) {
+			return values[0] + delim + Boolean.toString(cassClient.initKeyspace());
 		}
 		// Undefined command
 		else {

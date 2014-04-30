@@ -7,10 +7,18 @@ import java.net.Socket;
 
 public class ServerThread extends Thread {
 	private Socket socket = null;
+	String userName;
+	String password;
+	String cassIp;
+	int cassPort;
 
-    public ServerThread(Socket socket) {
+    public ServerThread(Socket socket, String userName, String password, String cassIp, int cassPort) {
         super("ServerThread");
         this.socket = socket;
+        this.userName = userName;
+    	this.password = password;
+    	this.cassIp = cassIp;
+    	this.cassPort = cassPort;
     }
     
     public void run() {
@@ -22,7 +30,7 @@ public class ServerThread extends Thread {
         ) {
             String inputLine, outputLine;
     		CassandraClient cassClient = new CassandraClient();
-    		cassClient.connect("127.0.0.1");
+    		cassClient.connect(cassIp, cassPort, userName, password);
             Protocol protocol = new Protocol(cassClient);
 
             while ((inputLine = in.readLine()) != null) {
@@ -31,6 +39,7 @@ public class ServerThread extends Thread {
                 if (outputLine.equals("Bye"))
                     break;
             }
+            
             cassClient.close();
             socket.close();
         } catch (IOException e) {
