@@ -23,7 +23,7 @@
 #include <lib.h>
 #include <log.h>
 
-#include <libcfu/cfuhash.h>
+#include <cfuhash.h>
 
 static int controller_CompChecksum(uint8_t *buf, uint32_t checksum);
 static int controller_Handshake(int fd);

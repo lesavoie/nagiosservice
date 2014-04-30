@@ -23,7 +23,7 @@
 #include <log.h>
 #include <cconnection.h>
 
-#include <libcfu/cfuhash.h>
+#include <cfuhash.h>
 
 /* These fields are required to speak with the cassandra 
  * database deamon. */

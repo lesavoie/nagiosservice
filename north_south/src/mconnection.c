@@ -23,7 +23,7 @@
 #include <lib.h>
 #include <log.h>
 
-#include <libcfu/cfuhash.h>
+#include <cfuhash.h>
 
 static int monitor_CompChecksum(uint8_t *buf, uint32_t checksum);
 
