@@ -142,7 +142,7 @@ static int pushConfigFile(char *filename, char *ip, char *port,
 	offset = 0;
 	while((count = read(fd, data + offset, 1024)) > 0){
 		offset += count;
-		data = (uint8_t *)realloc(data, 1024);
+		data = (uint8_t *)realloc(data, offset + 1024);
 	}
 	close(fd);
 	

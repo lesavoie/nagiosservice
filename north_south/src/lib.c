@@ -74,6 +74,7 @@ int listenPackets(int fd){
 		
 		#if DEBUG == 1 
 			fprintf(stderr, "listenPackets :: Received packet\n"); 
+			fprintf(stderr, "listenPackets :: %d\n", count); 
 		#endif
 
 		/* Do some sanity check on the packet header. */

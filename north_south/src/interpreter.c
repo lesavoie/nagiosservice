@@ -121,7 +121,7 @@ static int configIdent(uint8_t *buf, int size, int fd){
  * file. */
 static int configHost(uint8_t *buf, int size){
 
-	char *filename = "/etc/nagios3/conf.d/remote_host.cfg";
+	char *filename = "remote_host.cfg";
 
 	#if DEBUG == 1
 		fprintf(stderr, "configHost :: Request host configuration\n");
@@ -138,7 +138,7 @@ static int configHost(uint8_t *buf, int size){
 
 static int configService(uint8_t *buf, int size){
 
-	char *filename = "/etc/nagios3/conf.d/remote_service.cfg";
+	char *filename = "remote_service.cfg";
 
 	#if DEBUG == 1
 		fprintf(stderr, "configHost :: Request service configuration\n");

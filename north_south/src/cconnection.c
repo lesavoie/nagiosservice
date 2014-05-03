@@ -165,7 +165,8 @@ static void *controller_wrpNorth(void *args){
 	char *key;
 	int index = 0;
 	int *south_fd = NULL;
-	uint8_t forward_buffer[FORWARD_CHUNK];
+	uint8_t *forward_buffer;
+	struct Packet packet;	
 
 	fd = *((int*)args);
 	key = (char*)malloc(sizeof(char) * 256);
@@ -201,9 +202,18 @@ static void *controller_wrpNorth(void *args){
 
 	/* Read contents from the north bound interface and pass them
 	 * on the correct connection stream. */
-	while((count = read(fd, forward_buffer, FORWARD_CHUNK)) > 0){
-		write(*south_fd, forward_buffer, count);
-	}
+	/* Read the packet header. */
+
+	count = read(fd, &packet, sizeof(struct Packet));
+	
+	forward_buffer = (uint8_t*)malloc(packet.len);
+	memcpy(forward_buffer, &packet, sizeof(struct Packet));
+	
+	count = read(fd, forward_buffer + sizeof(struct Packet), 
+				packet.len - sizeof(struct Packet));
+
+	count = write(*south_fd, forward_buffer, packet.len);
+	free(forward_buffer);
 
 ret:
 	close(fd);
