@@ -16,6 +16,6 @@ struct Queue{
 /* Function prototype. */
 void QInit();
 int QAddData(uint8_t *data, int size);
-void QStartSpool(int fd);
+void QStartSpool(int *fd);
 
 #endif

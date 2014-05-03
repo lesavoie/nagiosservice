@@ -112,7 +112,7 @@ void monitor_StartComm(char *ip, char *port) {
 	/* Initialize and the start the buffer which pushes contents
 	 * onto the network stream. */
 	QInit();
-	QStartSpool(connection->msocket);
+	QStartSpool(&connection->msocket);
 	
 	monitor_Loop(connection);
 }

@@ -75,10 +75,10 @@ int QAddData(uint8_t *data, int size){
 }
 
 /* Function which initiates the spool. */
-void QStartSpool(int fd){
+void QStartSpool(int *fd){
 	pthread_t thread;	
 
-	pthread_create(&thread, NULL, QSpoolData, (void*)&fd);
+	pthread_create(&thread, NULL, QSpoolData, (void*)fd);
 }
 
 /* A tight loop which continously keeps throwing data into the
