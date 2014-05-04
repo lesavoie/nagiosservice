@@ -33,7 +33,7 @@ class Mapper:
       return name
 
    # TODO: contact_groups 
-   def processMonitor(self, monitor, hostsFile, servicesFile, contactsFile):
+   def processMonitor(self, monitor, fgFile):
       
       maxCheckAttempts = monitor.max_check_attempts
       checkInterval = monitor.check_interval
@@ -43,42 +43,41 @@ class Mapper:
       # TODO: will need to change when we support command line parameters
       command_str = "checknrpe_1arg!" + monitor.command.command_name
       
-      contactgroups = self.constructContactgroup(monitor.monitor_name, monitor.contacts, contactsFile)
+      contactgroups = self.constructContactgroup(monitor.monitor_name, monitor.contacts, cfgFile)
       
       host_str = (self.single_host_template % (monitor.monitor_name, monitor.human_readable_name, monitor.address, maxCheckAttempts, contactgroups))
-      hostsFile.write(host_str)
+      cfgFile.write(host_str)
       
       service_str = (self.single_service_template % (monitor.monitor_name, monitor.command.command_name + " on " + monitor.monitor_name, command_str, maxCheckAttempts, checkInterval, contactgroups, notificationInterval))
-      servicesFile.write(service_str)
+      cfgFile.write(service_str)
 
    def do_map(self, user, monitors, contacts, commands):
       parentDir = "/tmp/" + user.username + "/"
-      os.makedirs(parentDir)
-      contactsFile = open(parentDir + "contacts.cfg", "w")
-      hostsFile = open(parentDir + "hosts.cfg", "w")
-      servicesFile = open(parentDir + "services.cfg", "w")
+      try:
+         os.makedirs(parentDir)
+      except OSError:
+         print "Recreating %s because it exists already." % parentDir
+         shutil.rmtree(parentDir)
+         os.makedirs(parentDir)
+      cfgFile = open(parentDir + user.username + ".cfg", "w")
       print "Mapping user:"
       print user
       print "Contacts:"
       print contacts
       for contact in contacts:
          result = self.constructSingleContact(contact)
-         contactsFile.write(result)
-      self.constructContactgroup("all-contact", contacts, contactsFile)
+         cfgFile.write(result)
+      self.constructContactgroup("all-contact", contacts, cfgFile)
       print "Monitors:"
       print monitors
       for monitor in monitors:
-         self.processMonitor(monitor, hostsFile, servicesFile, contactsFile)
+         self.processMonitor(monitor, cfgFile)
       print "Commands:"
       print commands
-      contactsFile.close()
-      hostsFile.close()
-      servicesFile.close()
+      cfgFile.close()
       
       # call tool (Timeout only works for python3.3 or this code won't compile)
       ret = subprocess.call(["ns_tools -t 1 -c 127.0.0.1 -p 5600 -i " + user.username + " -f " + parentDir + "hosts.cfg"], shell=True)
-      ret = subprocess.call(["ns_tools -t 2 -c 127.0.0.1 -p 5600 -i " + user.username + " -f " + parentDir + "services.cfg"], shell=True)
-      ret = subprocess.call(["ns_tools -t 3 -c 127.0.0.1 -p 5600 -i " + user.username + " -f " + parentDir + "contacts.cfg"], shell=True)
       
       # clean up temp folder
       shutil.rmtree(parentDir)
