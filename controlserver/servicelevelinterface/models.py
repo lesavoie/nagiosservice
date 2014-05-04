@@ -95,6 +95,11 @@ class Monitor(models.Model):
       max_length=MAX_COMMAND_LINE_PARAMS_LENGTH,
       blank=True,
       help_text='The level at which to send a critical alert for this check. This field is optional because it is not required for all commands.')
+      
+   miscellaneous = models.CharField(
+      max_length=MAX_COMMAND_LINE_PARAMS_LENGTH,
+      blank=True,
+      help_text='The additional arguments needed by some commands.')
    
    class Meta:
       unique_together = ("owner", "monitor_name")

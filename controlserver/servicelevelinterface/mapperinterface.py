@@ -41,7 +41,7 @@ class Mapper:
          
       # construct command string
       # TODO: will need to change when we support command line parameters
-      command_str = "check_nrpe!" + monitor.command.command_name + "!" + monitor.warning_level + " " + monitor.critical_level
+      command_str = "check_nrpe!" + monitor.command.command_name + "!" + monitor.warning_level + " " + monitor.critical_level + " " + monitor.miscellaneous
       
       contactgroups = self.constructContactgroup(monitor.monitor_name, monitor.contacts, cfgFile)
       
