@@ -88,13 +88,11 @@ class Monitor(models.Model):
    
    warning_level = models.CharField(
       max_length=MAX_COMMAND_LINE_PARAMS_LENGTH,
-      blank=True,
-      help_text='The level at which to send a warning for this check. Specifying a warning level is optional.')
+      help_text='The level at which to send a warning for this check.')
 
    critical_level = models.CharField(
       max_length=MAX_COMMAND_LINE_PARAMS_LENGTH,
-      blank=True,
-      help_text='The level at which to send a critical alert for this check. This field is optional because it is not required for all commands.')
+      help_text='The level at which to send a critical alert for this check.')
       
    miscellaneous = models.CharField(
       max_length=MAX_COMMAND_LINE_PARAMS_LENGTH,
