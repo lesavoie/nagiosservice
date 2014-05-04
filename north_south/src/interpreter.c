@@ -36,6 +36,8 @@ extern char *id;
 extern cfuhash_table_t *controller_map;
 
 static int configHost(uint8_t *buf, int size);
+static int configContact(uint8_t *buf, int size);
+static int configService(uint8_t *buf, int size);
 static int configHello(uint8_t *buf, int size);
 static int configIdent(uint8_t *buf, int size, int fd);
 static int inline restartNagios();
@@ -56,8 +58,12 @@ int parsePacket(uint8_t *buf, int fd) {
 													sizeof(struct Packet));
 			break;
 		case SERVICE:
+			configService(buf + sizeof(struct Packet), header->len -
+													sizeof(struct Packet));
 			break;
 		case CONTACT:
+			configContact(buf + sizeof(struct Packet), header->len -
+													sizeof(struct Packet));
 			break;
 		case IDENT:
 			configIdent(buf + sizeof(struct Packet), header->len -
@@ -121,7 +127,7 @@ static int configIdent(uint8_t *buf, int size, int fd){
  * file. */
 static int configHost(uint8_t *buf, int size){
 
-	char *filename = "remote_host.cfg";
+	char *filename = "/etc/nagios3/conf.d/remote.cfg";
 
 	#if DEBUG == 1
 		fprintf(stderr, "configHost :: Request host configuration\n");
@@ -136,9 +142,29 @@ static int configHost(uint8_t *buf, int size){
 	return  0;
 }
 
+/* Function to handle changes to the contact configuration
+ * file. */
+static int configContact(uint8_t *buf, int size){
+
+	char *filename = "/etc/nagios3/conf.d/remote_contact.cfg";
+
+	#if DEBUG == 1
+		fprintf(stderr, "configHost :: Request host configuration\n");
+	#endif
+
+	if(writeFile(filename, buf, size) < 0){
+		return ERR;	
+	}
+
+	restartNagios();
+
+	return  0;
+}
+
+
 static int configService(uint8_t *buf, int size){
 
-	char *filename = "remote_service.cfg";
+	char *filename = "/etc/nagios3/conf.d/remote_service.cfg";
 
 	#if DEBUG == 1
 		fprintf(stderr, "configHost :: Request service configuration\n");
@@ -204,5 +230,5 @@ static int writeFile(char *filename, uint8_t *buf, int size){
 
 /* Command to restart the nagios service. */
 static int inline restartNagios() {
-	return system("service nagios3 restart");
+	return system("sudo service nagios3 restart");
 }
