@@ -33,7 +33,7 @@ class Mapper:
       return name
 
    # TODO: contact_groups 
-   def processMonitor(self, monitor, fgFile):
+   def processMonitor(self, monitor, cfgFile):
       
       maxCheckAttempts = monitor.max_check_attempts
       checkInterval = monitor.check_interval
