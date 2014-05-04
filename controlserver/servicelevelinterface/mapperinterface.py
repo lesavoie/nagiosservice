@@ -59,7 +59,7 @@ class Mapper:
          print "Recreating %s because it exists already." % parentDir
          shutil.rmtree(parentDir)
          os.makedirs(parentDir)
-      cfgFile = open(parentDir + user.username + ".cfg", "w")
+      cfgFile = open(parentDir + "cfgFile.cfg", "w")
       print "Mapping user:"
       print user
       print "Contacts:"
