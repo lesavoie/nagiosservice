@@ -5,6 +5,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.decorators import link
 from servicelevelinterface.models import Monitor, Contact, Command
 from servicelevelinterface.permissions import IsOwner
 from servicelevelinterface.serializers import MonitorSerializer, ContactSerializer, CommandSerializer, CreateUserSerializer
@@ -92,6 +93,16 @@ class ContactViewSet(BaseNagiosViewSet):
 class CommandViewSet(viewsets.ReadOnlyModelViewSet):
    queryset = Command.objects.all()
    serializer_class = CommandSerializer
+
+   # This is only provided so that we can call the mapper as needed.
+   # We require a user to be logged in so we can call the mapper for that
+   # user.
+   mapper_interface = MapperInterface()
+   @link(permission_classes=[permissions.IsAuthenticated])
+   def mapper(self, request, pk=None):
+      # Call the mapper and return an empty response
+      self.mapper_interface.do_map(self.request.user)
+      return Response('', status=status.HTTP_200_OK)
 
 
 # This view is only used to create new users.
