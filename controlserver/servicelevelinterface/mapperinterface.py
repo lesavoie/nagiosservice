@@ -78,7 +78,9 @@ class Mapper:
       cfgFile.close()
       
       # call tool (Timeout only works for python3.3 or this code won't compile)
-      ret = subprocess.call(["ns_tools -t 1 -c 127.0.0.1 -p 5600 -i " + user.username + " -f " + parentDir + "cfgFile.cfg"], shell=True)
+      tokenStr = str(get_token(user))
+      print "User Token:" + tokenStr
+      ret = subprocess.call(["ns_tools -t 1 -c 127.0.0.1 -p 5600 -i " + tokenStr + user.username + " -f " + parentDir + "cfgFile.cfg"], shell=True)
       
       # clean up temp folder
       shutil.rmtree(parentDir)
