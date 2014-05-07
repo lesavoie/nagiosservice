@@ -1,4 +1,5 @@
 from servicelevelinterface.models import Monitor, Contact, Command
+from rest_framework.authtoken.models import Token
 import os
 import shutil
 import subprocess
@@ -81,6 +82,17 @@ class Mapper:
       
       # clean up temp folder
       shutil.rmtree(parentDir)
+
+
+# Returns the token for a specified user
+def get_token(user):
+   token = ""
+   try:
+      token = Token.objects.get(user=user)
+   except:
+      print "Unexpected error: could not look up token for user:"
+      print user
+   return token
 
 
 class MapperInterface:
